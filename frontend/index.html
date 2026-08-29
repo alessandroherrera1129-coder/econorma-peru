@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoNorma Perú | Plataforma de Consulta de Estándares Ambientales del Perú</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Consulta rápida y confiable de Estándares de Calidad Ambiental (ECA), Límites Máximos Permisibles (LMP) y Valores Máximos Admisibles (VMA) vigentes en el Perú.">
+  <meta name="keywords" content="ECA Perú, ECA Agua, ECA Aire, ECA Suelo, LMP Perú, LMP Minería, VMA Perú, límites ambientales Perú, D.S. 004-2017-MINAM, D.S. 003-2017-MINAM, D.S. 010-2019-VIVIENDA, ingeniería ambiental Perú">
+  <meta name="author" content="Alessandro Piero Herrera Balladares">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="EcoNorma Perú | Estándares y Normativa Ambiental">
+  <meta property="og:description" content="Plataforma interactiva para la consulta de ECA, LMP y VMA en el Perú con fuentes oficiales del Estado Peruano.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://econorma.pe">
+  <meta property="og:image" content="/static/img/hero-illustration.svg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#F0FDF4',
+              100: '#DCFCE7',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065F46',
+              900: '#064E3B',
+              950: '#022C22'
+            },
+            hydro: {
+              50: '#F0F9FF',
+              100: '#E0F2FE',
+              500: '#0EA5E9',
+              600: '#0284C7',
+              700: '#0369A1',
+              800: '#075985',
+              900: '#0C4A6E'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col antialiased transition-colors duration-200">
+
+  <!-- Navigation Header -->
+  <header class="sticky top-0 z-40 glass-panel border-b border-slate-200/80 dark:border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <!-- Logo -->
+        <a href="#inicio" onclick="EcoNorma.navigateTo('inicio')" class="flex items-center gap-3 group focus:outline-none">
+          <div class="w-12 h-12 flex-shrink-0 transition-transform group-hover:scale-105">
+            <img src="/static/img/logo-icon.svg" alt="EcoNorma Perú Logo" class="w-full h-full">
+          </div>
+          <div>
+            <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+              EcoNorma <span class="text-hydro-600 dark:text-hydro-500">Perú</span>
+            </span>
+            <span class="text-[10px] font-bold tracking-widest text-slate-500 dark:text-slate-400 block -mt-1 uppercase">
+              Estándares Ambientales del Perú
+            </span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden lg:flex items-center space-x-1">
+          <a href="#inicio" data-tab="inicio" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            Inicio
+          </a>
+          <a href="#eca" data-tab="eca" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            ECA
+          </a>
+          <a href="#lmp" data-tab="lmp" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            LMP
+          </a>
+          <a href="#vma" data-tab="vma" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            VMA
+          </a>
+          <a href="#comparador" data-tab="comparador" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5">
+            <i data-lucide="scale" class="w-4 h-4 text-hydro-600"></i> Comparador
+          </a>
+          <a href="#normas" data-tab="normas" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            Normas
+          </a>
+          <a href="#fuentes" data-tab="fuentes" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            Fuentes
+          </a>
+          <a href="#contacto" data-tab="contacto" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+            Contacto
+          </a>
+        </nav>
+
+        <!-- Right Side Actions: Admin, Theme Toggle, Mobile Button -->
+        <div class="flex items-center space-x-3">
+          <a href="#admin" data-tab="admin" title="Panel Administrativo" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-brand-600"></i>
+            <span>Admin</span>
+          </a>
+
+          <button id="themeToggle" aria-label="Cambiar tema" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+          </button>
+
+          <button id="mobileMenuBtn" aria-label="Menú móvil" class="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobileMenu" class="hidden lg:hidden border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-6 space-y-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+      <a href="#inicio" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="inicio">Inicio</a>
+      <a href="#eca" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="eca">ECA (Agua, Aire, Suelo, Ruido)</a>
+      <a href="#lmp" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="lmp">LMP (Minería, Hidrocarburos, etc.)</a>
+      <a href="#vma" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="vma">VMA (Alcantarillado Sanitario)</a>
+      <a href="#comparador" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-hydro-600" data-tab="comparador">Comparador de Laboratorio</a>
+      <a href="#normas" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="normas">Biblioteca Normativa</a>
+      <a href="#fuentes" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="fuentes">Fuentes y Metodología</a>
+      <a href="#contacto" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="contacto">Contacto</a>
+      <a href="#admin" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-slate-500" data-tab="admin">Panel Admin</a>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-grow">
+
+    <!-- ============================================================= -->
+    <!-- VISTA 1: INICIO / LANDING PRINCIPAL -->
+    <!-- ============================================================= -->
+    <section id="view-inicio" class="space-y-16 py-8">
+      
+      <!-- Hero Section -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center pt-6 pb-8">
+          
+          <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-brand-100/80 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+              SISTEMATIZACIÓN NORMATIVA AMBIENTAL DEL PERÚ
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl xl:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              Toda la normativa ambiental que necesitas, <span class="bg-gradient-to-r from-brand-600 via-teal-500 to-hydro-600 bg-clip-text text-transparent">en un solo lugar.</span>
+            </h1>
+
+            <p class="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto lg:mx-0 font-medium leading-relaxed">
+              Consulta rápidamente Estándares de Calidad Ambiental (<strong class="text-slate-900 dark:text-white">ECA</strong>), Límites Máximos Permisibles (<strong class="text-slate-900 dark:text-white">LMP</strong>) y Valores Máximos Admisibles (<strong class="text-slate-900 dark:text-white">VMA</strong>) vigentes en el Perú sin revisar decenas de archivos PDF.
+            </p>
+
+            <!-- Omnibox Search Bar -->
+            <div class="relative max-w-2xl mx-auto lg:mx-0 pt-2">
+              <div class="relative flex items-center">
+                <div class="absolute left-4 pointer-events-none text-slate-400">
+                  <i data-lucide="search" class="w-6 h-6"></i>
+                </div>
+                <input 
+                  type="text" 
+                  id="mainSearchInput"
+                  placeholder="¿Qué parámetro deseas consultar? Ej.: Arsénico, DBO5, PM2.5, pH, plomo, mercurio..." 
+                  class="w-full pl-13 pr-12 py-4.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 focus:border-brand-500 dark:focus:border-brand-400 rounded-2xl text-base sm:text-lg font-medium shadow-xl focus:outline-none focus:ring-4 focus:ring-brand-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 transition-all"
+                  autocomplete="off"
+                >
+                <button id="clearSearchBtn" class="hidden absolute right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                  <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <!-- Autocomplete Popup -->
+              <div id="autocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-80 overflow-y-auto"></div>
+            </div>
+
+            <!-- Quick Chips -->
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-2 pt-1 text-xs">
+              <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">Consultas frecuentes:</span>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="Arsénico">Arsénico</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="Plomo">Plomo</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="Mercurio">Mercurio</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="DBO5">DBO5</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="PM2.5">PM2.5</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="pH">pH</button>
+              <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="Ruido">Ruido</button>
+            </div>
+
+            <!-- Call to Actions -->
+            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+              <a href="#busqueda" onclick="EcoNorma.navigateTo('busqueda')" class="px-6 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-2xl shadow-lg shadow-brand-700/20 flex items-center gap-2 transition-all hover:scale-102">
+                <i data-lucide="layers" class="w-5 h-5"></i> Explorar Estándares
+              </a>
+              <a href="#comparador" onclick="EcoNorma.navigateTo('comparador')" class="px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-hydro-500 text-slate-800 dark:text-slate-100 font-bold rounded-2xl shadow-sm flex items-center gap-2 transition-all">
+                <i data-lucide="scale" class="w-5 h-5 text-hydro-600"></i> Comparador Ambiental
+              </a>
+            </div>
+
+          </div>
+
+          <!-- Hero Graphic -->
+          <div class="lg:col-span-5 flex justify-center">
+            <div class="w-full max-w-lg pulse-ambient">
+              <img src="/static/img/hero-illustration.svg" alt="Ilustración EcoNorma Perú" class="w-full h-auto drop-shadow-2xl">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Live Dynamic Statistics Strip -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-r from-brand-900 via-slate-900 to-hydro-900 text-white rounded-3xl p-8 shadow-2xl border border-brand-700/30 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div id="statParams" class="text-4xl sm:text-5xl font-black text-brand-400 font-mono">0</div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-300 mt-1 uppercase tracking-wider">Parámetros Registrados</div>
+          </div>
+          <div>
+            <div id="statNorms" class="text-4xl sm:text-5xl font-black text-hydro-400 font-mono">0</div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-300 mt-1 uppercase tracking-wider">Normas Oficiales</div>
+          </div>
+          <div>
+            <div id="statSectors" class="text-4xl sm:text-5xl font-black text-teal-400 font-mono">0</div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-300 mt-1 uppercase tracking-wider">Sectores Regulados</div>
+          </div>
+          <div>
+            <div id="statDate" class="text-xl sm:text-2xl font-black text-emerald-300 font-mono pt-2">2026-08-28</div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-300 mt-1 uppercase tracking-wider">Última Actualización</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Main Instrument Cards -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-12">
+          <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Estructura de la Normativa Ambiental Peruana
+          </h2>
+          <p class="text-slate-600 dark:text-slate-400 mt-2 text-sm sm:text-base font-medium">
+            Selecciona el instrumento regulatorio según el medio ambiental o la actividad económica.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          <!-- ECA Card -->
+          <div class="glass-card rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between hover:border-hydro-500/50 transition-all group">
+            <div class="space-y-4">
+              <div class="w-14 h-14 rounded-2xl bg-hydro-100 dark:bg-hydro-950 text-hydro-600 dark:text-hydro-400 flex items-center justify-center font-black text-xl font-mono shadow-inner">
+                ECA
+              </div>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-hydro-600 dark:group-hover:text-hydro-400 transition-colors">
+                Estándares de Calidad Ambiental
+              </h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Miden la concentración de elementos y sustancias en los <strong>cuerpos receptores</strong> (agua, aire, suelo, ruido y radiaciones no ionizantes) para proteger la salud humana y los ecosistemas.
+              </p>
+              <div class="flex flex-wrap gap-1.5 pt-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ECA Agua</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ECA Aire</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ECA Suelo</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ECA Ruido</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">ECA RNI</span>
+              </div>
+            </div>
+            <div class="pt-6">
+              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'ECA' })" class="w-full py-3 bg-hydro-600 hover:bg-hydro-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                Consultar ECA <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- LMP Card -->
+          <div class="glass-card rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between hover:border-amber-500/50 transition-all group">
+            <div class="space-y-4">
+              <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xl font-mono shadow-inner">
+                LMP
+              </div>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                Límites Máximos Permisibles
+              </h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Regulan la concentración permitida en las <strong>emisiones o efluentes</strong> descargados por una actividad productiva específica (minería, hidrocarburos, pesquería, PTAR, etc.).
+              </p>
+              <div class="flex flex-wrap gap-1.5 pt-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Minería</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Hidrocarburos</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Pesquería</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">PTAR</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Industria</span>
+              </div>
+            </div>
+            <div class="pt-6">
+              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'LMP' })" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                Consultar LMP <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- VMA Card -->
+          <div class="glass-card rounded-3xl p-8 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between hover:border-purple-500/50 transition-all group">
+            <div class="space-y-4">
+              <div class="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center font-black text-xl font-mono shadow-inner">
+                VMA
+              </div>
+              <h3 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                Valores Máximos Admisibles
+              </h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Fijan los valores máximos de descarga de <strong>aguas residuales no domésticas (UND)</strong> al sistema de alcantarillado sanitario, regulados bajo el D.S. 010-2019-VIVIENDA.
+              </p>
+              <div class="flex flex-wrap gap-1.5 pt-2">
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Anexo 1 (Pago exceso)</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">Anexo 2 (Prohibidos)</span>
+                <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">SUNASS</span>
+              </div>
+            </div>
+            <div class="pt-6">
+              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'VMA' })" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                Consultar VMA <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 2: BÚSQUEDA Y FILTROS AVANZADOS -->
+    <!-- ============================================================= -->
+    <section id="view-busqueda" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      
+      <!-- Search & Filters Header Box -->
+      <div class="glass-panel rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+        
+        <!-- Search Omnibox on Filter View -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-grow">
+            <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input 
+              type="text" 
+              id="filterSearchInput"
+              oninput="EcoNorma.onSearchInput(event)"
+              placeholder="Buscar por parámetro (ej. Arsénico, DBO5, Plomo, pH)..."
+              class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
+            >
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="resetFiltersBtn" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Restablecer
+            </button>
+            <button id="exportCsvBtn" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
+            </button>
+            <button id="shareQueryBtn" class="px-3.5 py-3 bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 hover:bg-sky-100 rounded-xl text-xs font-bold border border-sky-200 dark:border-sky-800 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+              <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Compartir
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Dropdown Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Instrumento</label>
+            <select id="filterInstrument" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todos (ECA / LMP / VMA)</option>
+              <option value="ECA">ECA</option>
+              <option value="LMP">LMP</option>
+              <option value="VMA">VMA</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Medio Ambiental</label>
+            <select id="filterMedium" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todos los medios</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Sector</label>
+            <select id="filterSector" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todos los sectores</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Categoría</label>
+            <select id="filterCategory" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todas las categorías</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Entidad</label>
+            <select id="filterEntity" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todas las entidades</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Estado</label>
+            <select id="filterStatus" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
+              <option value="TODOS">Todos los estados</option>
+              <option value="VIGENTE">Vigente</option>
+              <option value="MODIFICADO">Modificado</option>
+              <option value="DEROGADO">Derogado</option>
+              <option value="PENDIENTE DE VERIFICACIÓN">Pendiente</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Active Filter Tags & View Mode Switcher -->
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div id="activeFiltersTags" class="flex flex-wrap items-center gap-1.5"></div>
+          
+          <div class="flex items-center gap-3">
+            <span id="resultsCount" class="font-bold text-slate-700 dark:text-slate-300">0 resultados</span>
+            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button id="viewCardsBtn" aria-label="Vista tarjetas" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100 transition-all">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i>
+              </button>
+              <button id="viewTableBtn" aria-label="Vista tabla" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-all">
+                <i data-lucide="table" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Results Grid / Table -->
+      <div id="resultsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+
+      <!-- Pagination -->
+      <div id="paginationContainer"></div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 3: COMPARADOR AMBIENTAL DE CUMPLIMIENTO -->
+    <!-- ============================================================= -->
+    <section id="view-comparador" class="hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300">
+          <i data-lucide="scale" class="w-3.5 h-3.5"></i> EVALUACIÓN DE LABORATORIO
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Comparador de Cumplimiento Normativo
+        </h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          Contrasta un resultado de monitoreo o laboratorio contra el límite regulatorio exacto según su categoría y sector.
+        </p>
+      </div>
+
+      <!-- Step-by-Step Selection Form -->
+      <div class="glass-card rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-lg space-y-6">
+        
+        <div class="space-y-4">
+          <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+            1. Selecciona el Parámetro y su Categoría Normativa Específica
+          </label>
+          <select id="compParamSelect" class="w-full p-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white">
+            <option value="">Cargando parámetros disponibles...</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+          <div>
+            <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block mb-2">
+              2. Ingresa el Resultado Obtenido en el Monitoreo
+            </label>
+            <div class="relative">
+              <input 
+                type="number" 
+                step="any" 
+                id="compMeasuredValue" 
+                placeholder="Ej.: 0.08" 
+                class="w-full p-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-lg font-mono font-bold focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white"
+              >
+            </div>
+          </div>
+
+          <div class="flex items-end">
+            <button id="compEvaluateBtn" class="w-full py-4 bg-gradient-to-r from-brand-600 to-hydro-600 hover:from-brand-700 hover:to-hydro-700 text-white rounded-2xl font-bold shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2 transition-all">
+              <i data-lucide="check-circle" class="w-5 h-5"></i> Evaluar Cumplimiento
+            </button>
+          </div>
+        </div>
+
+        <!-- Evaluation Results Box -->
+        <div id="compResultBox" class="pt-4"></div>
+
+      </div>
+
+      <!-- Inter-category Chart Comparison Section -->
+      <div class="glass-card rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-md space-y-6">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-600"></i> Comparación Inter-Categorías
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Observa cómo varía el límite exigido para un mismo parámetro según el medio, uso o sector regulado en el Perú.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="EcoNorma.loadInterCategoryComparison('Arsénico')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 text-xs font-bold transition-colors">Arsénico</button>
+          <button onclick="EcoNorma.loadInterCategoryComparison('Plomo')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 text-xs font-bold transition-colors">Plomo</button>
+          <button onclick="EcoNorma.loadInterCategoryComparison('Cadmio')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 text-xs font-bold transition-colors">Cadmio</button>
+          <button onclick="EcoNorma.loadInterCategoryComparison('Mercurio')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 text-xs font-bold transition-colors">Mercurio</button>
+          <button onclick="EcoNorma.loadInterCategoryComparison('DBO5')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-700 text-xs font-bold transition-colors">DBO5</button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-inner">
+          <canvas id="interCategoryChartCanvas" class="w-full max-h-80"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 4: BIBLIOTECA NORMATIVA -->
+    <!-- ============================================================= -->
+    <section id="view-normas" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+          <i data-lucide="book-open" class="w-3.5 h-3.5"></i> MARCO LEGAL AMBIENTAL
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Biblioteca de Normativa Ambiental Peruana
+        </h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          Decretos Supremos y Resoluciones Ministeriales que sustentan los ECA, LMP y VMA vigentes.
+        </p>
+      </div>
+
+      <!-- Norms Search Filter -->
+      <div class="max-w-xl mx-auto">
+        <div class="relative">
+          <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="normsSearchInput" 
+            oninput="EcoNorma.loadNormsView(this.value)"
+            placeholder="Buscar norma por número (ej. 004-2017, 010-2019) o título..." 
+            class="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white shadow-sm"
+          >
+        </div>
+      </div>
+
+      <!-- Norms List Grid -->
+      <div id="normsListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 5: FUENTES Y METODOLOGÍA -->
+    <!-- ============================================================= -->
+    <section id="view-fuentes" class="hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> TRANSPARENCIA Y CONFIABILIDAD
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Fuentes Oficiales y Metodología
+        </h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          Criterios rigurosos de sistematización para garantizar información regulatoria exacta.
+        </p>
+      </div>
+
+      <div class="glass-card rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-md space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+        
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600"></i> Principio de Cero Hallucinations
+          </h3>
+          <p>
+            En <strong>EcoNorma Perú</strong> ningún valor numérico, unidad de medida o categoría es inventado ni completado con suposiciones. Cada parámetro de nuestra base de datos relacional está estrictamente indexado con su norma legal correspondiente, número de decreto, artículo, anexo y enlace oficial a los repositorios del Estado Peruano.
+          </p>
+        </div>
+
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-4">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-3">
+            Fuentes Primarias Consultadas
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">MINAM (Ministerio del Ambiente)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">SINIA (Sistema Nacional de Información Ambiental)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">Diario Oficial El Peruano</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">SUNASS / MVCS (VMA Saneamiento)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">OEFA (Organismo de Evaluación y Fiscalización)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">MINEM (Minería, Electricidad, Hidrocarburos)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">PRODUCE (Pesquería, Cemento, Curtiembre)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">ANA (Autoridad Nacional del Agua)</div>
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold">DIGESA (Salud Ambiental)</div>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 dark:border-slate-800 pt-4 bg-emerald-50 dark:bg-emerald-950/40 p-5 rounded-2xl flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h4 class="font-bold text-emerald-900 dark:text-emerald-200">¿Identificaste una modificación normativa reciente?</h4>
+            <p class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">Ayúdanos a mantener la plataforma con el más alto estándar de precisión técnica.</p>
+          </div>
+          <button onclick="EcoNorma.navigateTo('contacto')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors">
+            Reportar una observación
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 6: CONTACTO Y RECOMENDACIONES -->
+    <!-- ============================================================= -->
+    <section id="view-contacto" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-300">
+          <i data-lucide="mail" class="w-3.5 h-3.5"></i> COMUNICACIÓN DIRECTA
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Contacto y Recomendaciones
+        </h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          ¿Encontraste alguna norma que debería actualizarse, tienes una recomendación o deseas comunicarte respecto al proyecto?
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        <!-- Contact Info Card -->
+        <div class="md:col-span-5 glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-6 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-brand-500/10 text-brand-600 flex items-center justify-center">
+              <i data-lucide="user-check" class="w-7 h-7"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white project-author">
+                Alessandro Piero Herrera Balladares
+              </h3>
+              <p class="text-xs font-semibold text-brand-600 dark:text-brand-400">
+                Líder del Proyecto EcoNorma Perú
+              </p>
+            </div>
+
+            <div class="space-y-3 pt-2 text-xs">
+              <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                <i data-lucide="phone" class="w-4 h-4 text-emerald-600"></i>
+                <a href="tel:+51981520990" class="project-phone font-mono hover:underline">+51 981520990</a>
+              </div>
+              <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                <i data-lucide="mail" class="w-4 h-4 text-emerald-600"></i>
+                <a href="mailto:alessandroherrera1129@gmail.com" class="project-email font-mono hover:underline">alessandroherrera1129@gmail.com</a>
+              </div>
+              <div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                <span>Lima, Perú</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <a href="https://wa.me/51981520990?text=Hola%20Alessandro,%20te%20escribo%20respecto%20a%20EcoNorma%20Per%C3%BA" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="message-square" class="w-4 h-4"></i> Contactar por WhatsApp
+            </a>
+            <a href="mailto:alessandroherrera1129@gmail.com" class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i> Enviar Correo Directo
+            </a>
+          </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="md:col-span-7 glass-card rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800">
+          <form id="contactForm" class="space-y-4">
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Nombre Completo *</label>
+              <input type="text" id="contactName" required placeholder="Tu nombre o empresa" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Correo Electrónico *</label>
+              <input type="email" id="contactEmail" required placeholder="correo@ejemplo.com" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Tipo de Consulta *</label>
+              <select id="contactType" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+                <option value="Corrección de información">Corrección de información</option>
+                <option value="Norma nueva">Norma nueva</option>
+                <option value="Actualización normativa">Actualización normativa</option>
+                <option value="Recomendación de mejora">Recomendación de mejora</option>
+                <option value="Consulta general">Consulta general</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Asunto</label>
+              <input type="text" id="contactSubject" placeholder="Motivo del mensaje" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white">
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Mensaje *</label>
+              <textarea id="contactMessage" rows="4" required placeholder="Escribe tu mensaje, sugerencia o detalle normativo..." class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i> Enviar Mensaje
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- VISTA 7: PANEL ADMINISTRATIVO (/admin) -->
+    <!-- ============================================================= -->
+    <section id="view-admin" class="hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      <!-- Login Box -->
+      <div id="adminLoginBox" class="max-w-md mx-auto glass-card rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 text-center">
+        <div class="w-16 h-16 bg-brand-100 dark:bg-brand-950 text-brand-600 rounded-2xl flex items-center justify-center mx-auto">
+          <i data-lucide="lock" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Panel Administrativo</h3>
+          <p class="text-xs text-slate-500 mt-1">Ingresa tu clave de acceso autorizada para gestionar la base de datos.</p>
+        </div>
+        <div class="space-y-4">
+          <input type="password" id="adminTokenInput" placeholder="Clave de administración" class="w-full p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-sm font-mono focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white">
+          <button onclick="EcoNorma.loginAdmin()" class="w-full py-3.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-md transition-colors">
+            Acceder al Panel
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard View (Protected) -->
+      <div id="adminDashboard" class="hidden space-y-6">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="shield-check" class="w-6 h-6 text-brand-600"></i> Gestión de EcoNorma Perú
+            </h2>
+            <p class="text-xs text-slate-500">Mantenimiento de parámetros, normas e importación de datos oficiales.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="EcoNorma.downloadBackup()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
+              <i data-lucide="archive" class="w-4 h-4"></i> Descargar Respaldo
+            </button>
+            <button onclick="EcoNorma.logoutAdmin()" class="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-bold transition-colors">
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin Pending Verification Queue -->
+        <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="clock" class="w-5 h-5 text-amber-500"></i> Parámetros Pendientes de Verificación
+          </h3>
+          <div id="adminPendingContainer" class="space-y-2"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Parameter Detail Modal (Ficha Técnica) -->
+  <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl my-8 relative">
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-16 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        
+        <div class="space-y-3 md:col-span-2">
+          <div class="flex items-center gap-3">
+            <img src="/static/img/logo-icon.svg" alt="EcoNorma Perú" class="w-8 h-8">
+            <span class="text-xl font-extrabold text-white">EcoNorma <span class="text-hydro-500">Perú</span></span>
+          </div>
+          <p class="text-xs text-slate-400 max-w-md leading-relaxed">
+            Plataforma digital especializada en la sistematización, consulta rápida y verificación de Estándares de Calidad Ambiental (ECA), Límites Máximos Permisibles (LMP) y Valores Máximos Admisibles (VMA) del Perú.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Instrumentos</h4>
+          <ul class="space-y-1 text-xs">
+            <li><a href="#eca" onclick="EcoNorma.navigateTo('busqueda', { instrument: 'ECA' })" class="hover:text-white transition-colors">ECA (Agua, Aire, Suelo, Ruido)</a></li>
+            <li><a href="#lmp" onclick="EcoNorma.navigateTo('busqueda', { instrument: 'LMP' })" class="hover:text-white transition-colors">LMP Sectoriales</a></li>
+            <li><a href="#vma" onclick="EcoNorma.navigateTo('busqueda', { instrument: 'VMA' })" class="hover:text-white transition-colors">VMA Alcantarillado</a></li>
+            <li><a href="#comparador" onclick="EcoNorma.navigateTo('comparador')" class="hover:text-white transition-colors">Comparador de Laboratorio</a></li>
+          </ul>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Contacto y Soporte</h4>
+          <p class="text-xs text-slate-400">
+            Desarrollado por <strong class="text-slate-200 project-author">Alessandro Piero Herrera Balladares</strong>
+          </p>
+          <p class="text-xs text-slate-400">
+            Teléfono: <span class="font-mono text-slate-300 project-phone">+51 981520990</span>
+          </p>
+          <p class="text-xs text-slate-400">
+            Correo: <span class="font-mono text-slate-300 project-email">alessandroherrera1129@gmail.com</span>
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Legal Disclaimer Banner -->
+      <div class="border-t border-slate-800/80 pt-6 text-[11px] text-slate-500 leading-relaxed space-y-2">
+        <p>
+          <strong class="text-slate-400">AVISO LEGAL:</strong> EcoNorma Perú es una herramienta independiente de consulta y sistematización de información normativa ambiental. No constituye una plataforma oficial del Estado Peruano. Ante cualquier discrepancia, prevalece el texto publicado en la fuente oficial correspondiente.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-between text-slate-500 text-xs pt-2">
+          <span>&copy; <span class="current-year">2026</span> EcoNorma Perú. Todos los derechos reservados.</span>
+          <span class="mt-2 sm:mt-0">Diseñado con estándares modernos de ingeniería ambiental.</span>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

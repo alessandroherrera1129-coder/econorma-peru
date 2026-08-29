@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: econorma-peru
+    env: python
+    buildCommand: "pip install -r requirements.txt && python scripts/generate_seed_parameters.py && python scripts/verify_data.py"
+    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: "EcoNorma Perú"
+      - key: APP_TAGLINE
+        value: "Plataforma de Consulta de Estándares Ambientales del Perú"
+      - key: PROJECT_AUTHOR
+        value: "Alessandro Piero Herrera Balladares"
+      - key: PROJECT_PHONE
+        value: "+51 981520990"
+      - key: PROJECT_EMAIL
+        value: "alessandroherrera1129@gmail.com"
+      - key: ADMIN_TOKEN
+        generateValue: true
