@@ -1,7 +1,7 @@
 /**
  * EcoNorma Perú - Frontend Application Engine
  * Plataforma de Consulta de Estándares Ambientales del Perú
- * Single Page Application, Búsqueda Reactiva, Comparador y Panel de Gestión
+ * Single Page Application, Búsqueda Reactiva, Comparador y Sistema CRUD Administrativo Integral.
  */
 
 const EcoNorma = (function() {
@@ -27,29 +27,30 @@ const EcoNorma = (function() {
     systemStats: {},
     adminToken: localStorage.getItem('econorma_admin_token') || '',
     activeTab: 'inicio',
+    adminSubTab: 'parametros', // 'parametros' | 'normas' | 'pendientes' | 'historial' | 'mensajes' | 'importar'
+    adminParamPage: 1,
+    adminParamPageSize: 25,
+    adminParamTotal: 0,
+    adminNormsList: [],
     selectedParamForDetail: null,
     interCategoryChart: null,
     autocompleteSelectedIndex: -1,
     autocompleteItems: []
   };
 
-  // Elementos DOM Clave
   const dom = {};
 
-  // Inicialización
   async function init() {
     cacheDomElements();
     initTheme();
     bindEvents();
     
-    // Cargar datos base en paralelo
     await Promise.all([
       fetchSystemInfo(),
       fetchSystemStats(),
       fetchFilterOptions()
     ]);
 
-    // Procesar ruta / query params iniciales
     handleRoute();
     window.addEventListener('popstate', handleRoute);
   }
@@ -61,13 +62,11 @@ const EcoNorma = (function() {
     dom.mobileMenuBtn = document.getElementById('mobileMenuBtn');
     dom.mobileMenu = document.getElementById('mobileMenu');
     
-    // Omnibox
     dom.mainSearchInput = document.getElementById('mainSearchInput');
     dom.autocompleteDropdown = document.getElementById('autocompleteDropdown');
     dom.clearSearchBtn = document.getElementById('clearSearchBtn');
     dom.quickChips = document.querySelectorAll('.quick-chip');
     
-    // Vistas principales
     dom.views = {
       inicio: document.getElementById('view-inicio'),
       busqueda: document.getElementById('view-busqueda'),
@@ -78,42 +77,37 @@ const EcoNorma = (function() {
       admin: document.getElementById('view-admin')
     };
 
-    // Filtros
     dom.filterInstrument = document.getElementById('filterInstrument');
     dom.filterMedium = document.getElementById('filterMedium');
     dom.filterSector = document.getElementById('filterSector');
     dom.filterCategory = document.getElementById('filterCategory');
     dom.filterEntity = document.getElementById('filterEntity');
     dom.filterStatus = document.getElementById('filterStatus');
-    dom.filterYear = document.getElementById('filterYear');
     dom.resetFiltersBtn = document.getElementById('resetFiltersBtn');
     dom.viewCardsBtn = document.getElementById('viewCardsBtn');
     dom.viewTableBtn = document.getElementById('viewTableBtn');
     dom.exportCsvBtn = document.getElementById('exportCsvBtn');
     dom.shareQueryBtn = document.getElementById('shareQueryBtn');
 
-    // Resultados
     dom.resultsContainer = document.getElementById('resultsContainer');
     dom.resultsCount = document.getElementById('resultsCount');
     dom.activeFiltersTags = document.getElementById('activeFiltersTags');
     dom.paginationContainer = document.getElementById('paginationContainer');
 
-    // Modal Ficha Técnica
     dom.detailModal = document.getElementById('detailModal');
     dom.detailModalContent = document.getElementById('detailModalContent');
-    dom.closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
 
-    // Stats
+    dom.adminParamModal = document.getElementById('adminParamModal');
+    dom.adminNormModal = document.getElementById('adminNormModal');
+
     dom.statParams = document.getElementById('statParams');
     dom.statNorms = document.getElementById('statNorms');
     dom.statSectors = document.getElementById('statSectors');
     dom.statDate = document.getElementById('statDate');
 
-    // Toast Container
     dom.toastContainer = document.getElementById('toastContainer');
   }
 
-  // --- Manejo del Tema Dark / Light ---
   function initTheme() {
     const saved = localStorage.getItem('econorma_theme');
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -139,7 +133,6 @@ const EcoNorma = (function() {
     }
   }
 
-  // --- Carga de Metadatos y Estadísticas ---
   async function fetchSystemInfo() {
     try {
       const res = await fetch('/api/stats/info');
@@ -148,34 +141,26 @@ const EcoNorma = (function() {
         renderSystemInfo();
       }
     } catch (e) {
-      console.warn('Error cargando info del sistema:', e);
+      console.warn('Error cargando info:', e);
     }
   }
 
   function renderSystemInfo() {
-    const appTitles = document.querySelectorAll('.app-title');
-    appTitles.forEach(el => el.textContent = state.systemInfo.app_name || 'EcoNorma Perú');
+    document.querySelectorAll('.app-title').forEach(el => el.textContent = state.systemInfo.app_name || 'EcoNorma Perú');
+    document.querySelectorAll('.app-tagline').forEach(el => el.textContent = state.systemInfo.tagline || 'Plataforma de Consulta de Estándares Ambientales del Perú');
+    document.querySelectorAll('.project-author').forEach(el => el.textContent = state.systemInfo.author || 'Alessandro Piero Herrera Balladares');
     
-    const appTaglines = document.querySelectorAll('.app-tagline');
-    appTaglines.forEach(el => el.textContent = state.systemInfo.tagline || 'Plataforma de Consulta de Estándares Ambientales del Perú');
-
-    const authorEls = document.querySelectorAll('.project-author');
-    authorEls.forEach(el => el.textContent = state.systemInfo.author || 'Alessandro Piero Herrera Balladares');
-
-    const phoneEls = document.querySelectorAll('.project-phone');
-    phoneEls.forEach(el => {
+    document.querySelectorAll('.project-phone').forEach(el => {
       el.textContent = state.systemInfo.phone || '+51 981520990';
       if (el.tagName === 'A') el.href = `tel:${state.systemInfo.phone || '+51981520990'}`;
     });
 
-    const emailEls = document.querySelectorAll('.project-email');
-    emailEls.forEach(el => {
+    document.querySelectorAll('.project-email').forEach(el => {
       el.textContent = state.systemInfo.email || 'alessandroherrera1129@gmail.com';
       if (el.tagName === 'A') el.href = `mailto:${state.systemInfo.email || 'alessandroherrera1129@gmail.com'}`;
     });
 
-    const currentYearEls = document.querySelectorAll('.current-year');
-    currentYearEls.forEach(el => el.textContent = new Date().getFullYear());
+    document.querySelectorAll('.current-year').forEach(el => el.textContent = new Date().getFullYear());
   }
 
   async function fetchSystemStats() {
@@ -189,7 +174,7 @@ const EcoNorma = (function() {
         if (dom.statDate) dom.statDate.textContent = state.systemStats.last_database_update || '2026-08-28';
       }
     } catch (e) {
-      console.warn('Error cargando stats:', e);
+      console.warn('Error stats:', e);
     }
   }
 
@@ -201,7 +186,7 @@ const EcoNorma = (function() {
         populateFilterDropdowns();
       }
     } catch (e) {
-      console.warn('Error cargando opciones de filtro:', e);
+      console.warn('Error filters:', e);
     }
   }
 
@@ -211,6 +196,13 @@ const EcoNorma = (function() {
     populateSelect(dom.filterSector, state.filterOptions.sectors);
     populateSelect(dom.filterCategory, state.filterOptions.categories);
     populateSelect(dom.filterEntity, state.filterOptions.issuing_entities);
+
+    const adminMedium = document.getElementById('adminFilterMedium');
+    const adminSector = document.getElementById('adminFilterSector');
+    const adminNorm = document.getElementById('adminFilterNorm');
+    if (adminMedium) populateSelect(adminMedium, state.filterOptions.environmental_media);
+    if (adminSector) populateSelect(adminSector, state.filterOptions.sectors);
+    if (adminNorm) populateSelect(adminNorm, state.filterOptions.norm_codes);
   }
 
   function populateSelect(selectEl, items) {
@@ -230,11 +222,8 @@ const EcoNorma = (function() {
     if (currentVal) selectEl.value = currentVal;
   }
 
-  // --- Manejo de Rutas y Navegación ---
   function navigateTo(tab, params = {}) {
     state.activeTab = tab;
-    
-    // Construir Hash
     let hash = `#${tab}`;
     const searchParams = new URLSearchParams();
     if (params.q) searchParams.set('q', params.q);
@@ -246,10 +235,7 @@ const EcoNorma = (function() {
     if (params.paramName) searchParams.set('parametro', params.paramName);
 
     const queryString = searchParams.toString();
-    if (queryString) {
-      hash += `?${queryString}`;
-    }
-    
+    if (queryString) hash += `?${queryString}`;
     window.location.hash = hash;
   }
 
@@ -258,7 +244,6 @@ const EcoNorma = (function() {
     const [path, queryString] = rawHash.split('?');
     const params = new URLSearchParams(queryString || '');
 
-    // Actualizar nav
     state.activeTab = path || 'inicio';
     dom.navLinks.forEach(link => {
       const target = link.getAttribute('data-tab');
@@ -271,7 +256,6 @@ const EcoNorma = (function() {
       }
     });
 
-    // Ocultar todas las vistas y mostrar la activa
     Object.keys(dom.views).forEach(vKey => {
       if (dom.views[vKey]) {
         if (vKey === state.activeTab) {
@@ -284,7 +268,6 @@ const EcoNorma = (function() {
 
     if (dom.mobileMenu) dom.mobileMenu.classList.add('hidden');
 
-    // Procesar parámetros de URL según la vista
     if (state.activeTab === 'busqueda' || state.activeTab === 'eca' || state.activeTab === 'lmp' || state.activeTab === 'vma') {
       if (state.activeTab === 'eca') state.instrument = 'ECA';
       else if (state.activeTab === 'lmp') state.instrument = 'LMP';
@@ -298,10 +281,8 @@ const EcoNorma = (function() {
       if (params.get('categoria')) state.category = params.get('categoria');
       if (params.get('norma')) state.normCode = params.get('norma');
 
-      // Sincronizar UI de filtros
       syncFiltersToUI();
       executeSearch();
-      // Mostrar vista de búsqueda si era ECA/LMP/VMA shortcut
       if (state.activeTab !== 'busqueda') {
         if (dom.views.busqueda) dom.views.busqueda.classList.remove('hidden');
       }
@@ -326,15 +307,12 @@ const EcoNorma = (function() {
     if (dom.filterStatus) dom.filterStatus.value = state.status;
   }
 
-  // --- Búsqueda y Autocompletado ---
   let debounceTimeout = null;
   function onSearchInput(e) {
     const val = e.target.value;
     state.query = val;
     
-    if (dom.clearSearchBtn) {
-      dom.clearSearchBtn.classList.toggle('hidden', val.length === 0);
-    }
+    if (dom.clearSearchBtn) dom.clearSearchBtn.classList.toggle('hidden', val.length === 0);
 
     clearTimeout(debounceTimeout);
     if (val.trim().length >= 1) {
@@ -369,7 +347,7 @@ const EcoNorma = (function() {
     state.autocompleteSelectedIndex = -1;
     dom.autocompleteDropdown.innerHTML = '';
     
-    items.forEach((item, index) => {
+    items.forEach((item) => {
       const el = document.createElement('div');
       el.className = 'px-4 py-3 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700/60 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between transition-colors';
       el.innerHTML = `
@@ -430,7 +408,6 @@ const EcoNorma = (function() {
     }
   }
 
-  // --- Ejecución de Búsqueda y Render de Resultados ---
   async function executeSearch() {
     if (!dom.resultsContainer) return;
     
@@ -443,7 +420,6 @@ const EcoNorma = (function() {
     if (state.medium !== 'TODOS') params.set('medium', state.medium);
     if (state.sector !== 'TODOS') params.set('sector', state.sector);
     if (state.category !== 'TODOS') params.set('category', state.category);
-    if (state.subcategory !== 'TODOS') params.set('subcategory', state.subcategory);
     if (state.status !== 'TODOS') params.set('status', state.status);
     if (state.normCode !== 'TODOS') params.set('norm_code', state.normCode);
     if (state.entity !== 'TODOS') params.set('entity', state.entity);
@@ -505,24 +481,12 @@ const EcoNorma = (function() {
     if (!dom.activeFiltersTags) return;
     const badges = [];
 
-    if (state.query) {
-      badges.push({ key: 'q', label: `Búsqueda: "${state.query}"` });
-    }
-    if (state.instrument !== 'TODOS') {
-      badges.push({ key: 'instrument', label: `Instrumento: ${state.instrument}` });
-    }
-    if (state.medium !== 'TODOS') {
-      badges.push({ key: 'medium', label: `Medio: ${state.medium}` });
-    }
-    if (state.sector !== 'TODOS') {
-      badges.push({ key: 'sector', label: `Sector: ${state.sector}` });
-    }
-    if (state.category !== 'TODOS') {
-      badges.push({ key: 'category', label: `Categoría: ${state.category}` });
-    }
-    if (state.status !== 'TODOS') {
-      badges.push({ key: 'status', label: `Estado: ${state.status}` });
-    }
+    if (state.query) badges.push({ key: 'q', label: `Búsqueda: "${state.query}"` });
+    if (state.instrument !== 'TODOS') badges.push({ key: 'instrument', label: `Instrumento: ${state.instrument}` });
+    if (state.medium !== 'TODOS') badges.push({ key: 'medium', label: `Medio: ${state.medium}` });
+    if (state.sector !== 'TODOS') badges.push({ key: 'sector', label: `Sector: ${state.sector}` });
+    if (state.category !== 'TODOS') badges.push({ key: 'category', label: `Categoría: ${state.category}` });
+    if (state.status !== 'TODOS') badges.push({ key: 'status', label: `Estado: ${state.status}` });
 
     if (badges.length === 0) {
       dom.activeFiltersTags.innerHTML = '<span class="text-xs text-slate-400">Sin filtros aplicados</span>';
@@ -554,7 +518,7 @@ const EcoNorma = (function() {
           </div>
           <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">No encontramos estándares con esos criterios</h3>
           <p class="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-            Intenta buscar por el nombre químico, símbolo (ej. <code class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono">As</code>, <code class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono">DBO5</code>, <code class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono">PM2.5</code>) o restablece los filtros.
+            Intenta buscar por el nombre químico, símbolo o restablece los filtros.
           </p>
           <button onclick="EcoNorma.resetAllFilters()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md transition-colors">
             Restablecer todos los filtros
@@ -579,7 +543,6 @@ const EcoNorma = (function() {
     dom.resultsContainer.innerHTML = state.results.map(item => `
       <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between relative group hover:border-emerald-500/50 dark:hover:border-emerald-500/50">
         <div>
-          <!-- Header Card: Instrument + Status -->
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
               <span class="px-2.5 py-1 rounded-md text-xs font-black tracking-wider ${getInstrumentBgClass(item.instrument)}">
@@ -595,7 +558,6 @@ const EcoNorma = (function() {
             </span>
           </div>
 
-          <!-- Title & Chemical Symbol -->
           <div class="mb-2">
             <h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               ${item.parameter_name}
@@ -606,7 +568,6 @@ const EcoNorma = (function() {
             </div>
           </div>
 
-          <!-- Category and Subcategory -->
           <div class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 mb-4 space-y-1 border border-slate-100 dark:border-slate-800">
             <div class="font-semibold text-slate-800 dark:text-slate-200">
               <i data-lucide="tag" class="w-3.5 h-3.5 inline-block mr-1 text-emerald-600"></i> ${item.category}
@@ -615,7 +576,6 @@ const EcoNorma = (function() {
             ${item.sector ? `<div class="text-[11px] text-slate-400">Sector: ${item.sector}</div>` : ''}
           </div>
 
-          <!-- Standard Value Display -->
           <div class="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-slate-800/80 dark:to-emerald-950/30 rounded-xl p-4 mb-4 border border-emerald-100 dark:border-emerald-900/40">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
               Valor Regulatorio
@@ -631,7 +591,6 @@ const EcoNorma = (function() {
             ${item.evaluation_period ? `<span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i> ${item.evaluation_period}</span>` : ''}
           </div>
 
-          <!-- Norm Reference -->
           <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
             <span class="font-semibold text-slate-700 dark:text-slate-300">
               <i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> ${item.norm_code}
@@ -640,7 +599,6 @@ const EcoNorma = (function() {
           </div>
         </div>
 
-        <!-- Action Buttons -->
         <div class="grid grid-cols-2 gap-2 pt-2">
           <button onclick="EcoNorma.openParamDetail(${item.id})" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
             <i data-lucide="eye" class="w-3.5 h-3.5"></i> Ficha Técnica
@@ -648,7 +606,7 @@ const EcoNorma = (function() {
           <button onclick="EcoNorma.openComparatorWithParam(${item.id})" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-700 dark:text-sky-300 rounded-xl text-xs font-bold border border-sky-200 dark:border-sky-800 transition-all">
             <i data-lucide="scale" class="w-3.5 h-3.5"></i> Comparar
           </button>
-          <a href="${item.official_url}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-semibold transition-all">
+          <a href="${item.official_url || '#'}" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-semibold transition-all">
             <i data-lucide="external-link" class="w-3 h-3"></i> Norma Oficial
           </a>
           <button onclick="EcoNorma.copyParamReference(${item.id})" class="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-[11px] font-semibold transition-all">
@@ -713,7 +671,7 @@ const EcoNorma = (function() {
                       <button onclick="EcoNorma.openComparatorWithParam(${item.id})" title="Comparar resultado" class="p-1.5 hover:bg-sky-100 dark:hover:bg-sky-950 text-sky-700 dark:text-sky-300 rounded-lg">
                         <i data-lucide="scale" class="w-4 h-4"></i>
                       </button>
-                      <a href="${item.official_url}" target="_blank" rel="noopener noreferrer" title="Consultar norma oficial" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg">
+                      <a href="${item.official_url || '#'}" target="_blank" rel="noopener noreferrer" title="Consultar norma oficial" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg">
                         <i data-lucide="external-link" class="w-4 h-4"></i>
                       </a>
                     </div>
@@ -728,9 +686,7 @@ const EcoNorma = (function() {
   }
 
   function formatParamValue(item) {
-    if (item.min_value !== null && item.max_value !== null) {
-      return `${item.min_value} - ${item.max_value}`;
-    }
+    if (item.min_value !== null && item.max_value !== null) return `${item.min_value} - ${item.max_value}`;
     if (item.max_value !== null) return `${item.max_value}`;
     if (item.min_value !== null) return `≥ ${item.min_value}`;
     return 'N/A';
@@ -741,8 +697,28 @@ const EcoNorma = (function() {
       case 'VIGENTE': return 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
       case 'MODIFICADO': return 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
       case 'DEROGADO': return 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
-      case 'PENDIENTE DE VERIFICACIÓN': return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300';
+      case 'INACTIVO':
+      case 'INACTIVA':
+        return 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300';
+      case 'PENDIENTE DE VERIFICACIÓN': return 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border border-yellow-300';
+      case 'REQUIERE REVISIÓN': return 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border border-orange-300';
+      case 'NO PUBLICAR': return 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300';
       default: return 'bg-slate-100 text-slate-700';
+    }
+  }
+
+  function getVerificationBadgeHtml(verifStatus) {
+    switch (verifStatus) {
+      case 'VERIFICADO':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200"><i data-lucide="check" class="w-3 h-3"></i> Verificado</span>`;
+      case 'PENDIENTE DE VERIFICACIÓN':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border border-yellow-300"><i data-lucide="clock" class="w-3 h-3"></i> Pendiente</span>`;
+      case 'REQUIERE REVISIÓN':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border border-orange-300"><i data-lucide="alert-circle" class="w-3 h-3"></i> Revisión</span>`;
+      case 'NO PUBLICAR':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 border border-rose-300"><i data-lucide="eye-off" class="w-3 h-3"></i> Oculto</span>`;
+      default:
+        return `<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100">${verifStatus || 'Sin estado'}</span>`;
     }
   }
 
@@ -792,7 +768,6 @@ const EcoNorma = (function() {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   }
 
-  // --- Ficha Técnica y Detalle del Parámetro ---
   async function openParamDetail(id) {
     try {
       const res = await fetch(`/api/parameters/${id}`);
@@ -811,7 +786,6 @@ const EcoNorma = (function() {
 
     dom.detailModalContent.innerHTML = `
       <div class="space-y-6">
-        <!-- Top Header -->
         <div class="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
             <div class="flex items-center gap-2 mb-1.5">
@@ -835,7 +809,6 @@ const EcoNorma = (function() {
           </button>
         </div>
 
-        <!-- Metric Value Card -->
         <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-sky-500/10 border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Valor Normativo Establecido</span>
@@ -855,7 +828,6 @@ const EcoNorma = (function() {
           </div>
         </div>
 
-        <!-- Section: ¿Dónde aplica? -->
         <div class="space-y-2">
           <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i> ¿Dónde aplica este estándar?
@@ -868,7 +840,6 @@ const EcoNorma = (function() {
           </div>
         </div>
 
-        <!-- Section: Método y Criterios Analíticos -->
         ${p.method_criteria || p.observations ? `
           <div class="space-y-2">
             <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -881,13 +852,12 @@ const EcoNorma = (function() {
           </div>
         ` : ''}
 
-        <!-- Section: Fuente Legal y Trazabilidad -->
         <div class="space-y-2">
           <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <i data-lucide="scale" class="w-4 h-4 text-emerald-600"></i> Fuente Legal y Sustento Normativo
           </h4>
           <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 text-xs space-y-2">
-            <p class="font-bold text-slate-800 dark:text-slate-200">${p.norm_name} (${p.norm_code})</p>
+            <p class="font-bold text-slate-800 dark:text-slate-200">${p.norm_name || p.norm_code} (${p.norm_code})</p>
             <div class="grid grid-cols-2 gap-2 text-slate-500">
               <div><strong>Entidad emisora:</strong> ${p.issuing_entity}</div>
               <div><strong>Año de publicación:</strong> ${p.year}</div>
@@ -897,7 +867,6 @@ const EcoNorma = (function() {
           </div>
         </div>
 
-        <!-- Buttons Footer -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
           <button onclick="EcoNorma.copyParamReference(${p.id})" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Cita Bibliográfica
@@ -906,7 +875,7 @@ const EcoNorma = (function() {
             <button onclick="EcoNorma.openComparatorWithParam(${p.id}); EcoNorma.closeDetailModal();" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5">
               <i data-lucide="scale" class="w-3.5 h-3.5"></i> Comparar en Laboratorio
             </button>
-            <a href="${p.official_url}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5">
+            <a href="${p.official_url || '#'}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center gap-1.5">
               <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Consultar Norma Oficial
             </a>
           </div>
@@ -929,7 +898,7 @@ const EcoNorma = (function() {
   function copyParamReference(paramId) {
     const p = state.results.find(x => x.id === paramId) || state.selectedParamForDetail;
     if (!p) return;
-    const citation = `MINAM / ${p.issuing_entity} (${p.year}). ${p.norm_name} [${p.norm_code}]. Parámetro: ${p.parameter_name} (${p.value_text || formatParamValue(p)} ${p.unit}) en ${p.category} ${p.subcategory ? `- ${p.subcategory}` : ''}. Fuente oficial: ${p.official_url}`;
+    const citation = `MINAM / ${p.issuing_entity} (${p.year}). ${p.norm_name || p.norm_code} [${p.norm_code}]. Parámetro: ${p.parameter_name} (${p.value_text || formatParamValue(p)} ${p.unit}) en ${p.category} ${p.subcategory ? `- ${p.subcategory}` : ''}. Fuente oficial: ${p.official_url || ''}`;
     navigator.clipboard.writeText(citation).then(() => {
       showToast('Referencia legal copiada al portapapeles', 'success');
     }).catch(() => {
@@ -937,22 +906,10 @@ const EcoNorma = (function() {
     });
   }
 
-  // --- Comparador Ambiental de Cumplimiento ---
-  let comparatorData = {
-    selectedParamId: null,
-    selectedParam: null
-  };
-
   async function initComparatorView(preselectedParamId = null) {
     const compParamSelect = document.getElementById('compParamSelect');
-    const compInstrument = document.getElementById('compInstrument');
-    const compEvaluateBtn = document.getElementById('compEvaluateBtn');
-    const compMeasuredValue = document.getElementById('compMeasuredValue');
-    const compResultBox = document.getElementById('compResultBox');
-
     if (!compParamSelect) return;
 
-    // Cargar lista completa de parámetros para selector guiado
     try {
       const res = await fetch('/api/parameters/search?page_size=500');
       if (res.ok) {
@@ -969,7 +926,6 @@ const EcoNorma = (function() {
 
         if (preselectedParamId) {
           compParamSelect.value = preselectedParamId;
-          onComparatorParamChange(preselectedParamId, allParams);
         }
       }
     } catch (e) {
@@ -1075,7 +1031,6 @@ const EcoNorma = (function() {
           ${evalData.evaluation_text}
         </p>
 
-        <!-- Mandatory Disclaimer -->
         <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-xl p-3.5 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
           <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600"></i>
           <span>${evalData.disclaimer}</span>
@@ -1086,10 +1041,8 @@ const EcoNorma = (function() {
     if (window.lucide) window.lucide.createIcons();
   }
 
-  // --- Comparación Visual Inter-Categorías (Chart.js) ---
   async function loadInterCategoryComparison(paramName) {
     const chartCanvas = document.getElementById('interCategoryChartCanvas');
-    const tableContainer = document.getElementById('interCategoryTableContainer');
     if (!chartCanvas || !paramName) return;
 
     try {
@@ -1112,7 +1065,6 @@ const EcoNorma = (function() {
       state.interCategoryChart.destroy();
     }
 
-    // Filtrar solo los ítems que tengan unidad compatible y valor numérico
     const validItems = items.filter(x => x.max_value !== null || x.min_value !== null);
     if (validItems.length === 0) return;
 
@@ -1154,7 +1106,6 @@ const EcoNorma = (function() {
     });
   }
 
-  // --- Biblioteca Normativa ---
   async function loadNormsView(query = '') {
     const container = document.getElementById('normsListContainer');
     const searchInput = document.getElementById('normsSearchInput');
@@ -1219,7 +1170,7 @@ const EcoNorma = (function() {
             <button onclick="EcoNorma.searchByNorm('${n.code}')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center justify-center gap-1.5">
               <i data-lucide="search" class="w-3.5 h-3.5"></i> Ver Parámetros
             </button>
-            <a href="${n.official_url}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5">
+            <a href="${n.official_url || '#'}" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5">
               <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Norma Oficial
             </a>
           </div>
@@ -1234,7 +1185,6 @@ const EcoNorma = (function() {
     navigateTo('busqueda', { normCode: normCode });
   }
 
-  // --- Formulario de Contacto y Observaciones ---
   async function submitContactForm(e) {
     e.preventDefault();
     const name = document.getElementById('contactName').value;
@@ -1268,7 +1218,10 @@ const EcoNorma = (function() {
     }
   }
 
-  // --- Panel Administrativo ---
+  // =========================================================================
+  // SISTEMA ADMINISTRATIVO Y CRUD INTEGRAL (PARÁMETROS, NORMAS, HISTORIAL)
+  // =========================================================================
+
   async function initAdminView() {
     const adminLoginBox = document.getElementById('adminLoginBox');
     const adminDashboard = document.getElementById('adminDashboard');
@@ -1277,11 +1230,89 @@ const EcoNorma = (function() {
     if (state.adminToken) {
       adminLoginBox.classList.add('hidden');
       adminDashboard.classList.remove('hidden');
-      loadAdminPendingVerification();
+      await preloadAdminNormsCatalog();
+      switchAdminSubTab(state.adminSubTab || 'parametros');
     } else {
       adminLoginBox.classList.remove('hidden');
       adminDashboard.classList.add('hidden');
     }
+  }
+
+  async function preloadAdminNormsCatalog() {
+    try {
+      const res = await fetch('/api/admin/norms', {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        state.adminNormsList = data.norms || [];
+        populateAdminNormsDropdowns();
+      }
+    } catch (e) {
+      console.warn('Error precargando normas admin:', e);
+    }
+  }
+
+  function populateAdminNormsDropdowns() {
+    const editParamNormCode = document.getElementById('editParamNormCode');
+    const adminFilterNorm = document.getElementById('adminFilterNorm');
+
+    if (editParamNormCode) {
+      editParamNormCode.innerHTML = '<option value="">-- Selecciona la norma legal oficial --</option>';
+      state.adminNormsList.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n.code;
+        opt.textContent = `${n.code} - ${n.title.substring(0, 60)}... (${n.year})`;
+        editParamNormCode.appendChild(opt);
+      });
+    }
+
+    if (adminFilterNorm) {
+      adminFilterNorm.innerHTML = '<option value="TODOS">Todas las normas</option>';
+      state.adminNormsList.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n.code;
+        opt.textContent = n.code;
+        adminFilterNorm.appendChild(opt);
+      });
+    }
+  }
+
+  function switchAdminSubTab(subTab) {
+    state.adminSubTab = subTab;
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      if (btn.getAttribute('data-admin-tab') === subTab) {
+        btn.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+        btn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+      } else {
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+      }
+    });
+
+    const sections = {
+      parametros: document.getElementById('adminSectionParametros'),
+      normas: document.getElementById('adminSectionNormas'),
+      pendientes: document.getElementById('adminSectionPendientes'),
+      historial: document.getElementById('adminSectionHistorial'),
+      mensajes: document.getElementById('adminSectionMensajes'),
+      importar: document.getElementById('adminSectionImportar')
+    };
+
+    Object.keys(sections).forEach(k => {
+      if (sections[k]) {
+        if (k === subTab) sections[k].classList.remove('hidden');
+        else sections[k].classList.add('hidden');
+      }
+    });
+
+    if (subTab === 'parametros') loadAdminParameters();
+    else if (subTab === 'normas') loadAdminNorms();
+    else if (subTab === 'pendientes') loadAdminPendingVerification();
+    else if (subTab === 'historial') loadAdminAuditLogs();
+    else if (subTab === 'mensajes') loadAdminInquiries();
+
+    if (window.lucide) window.lucide.createIcons();
   }
 
   async function loginAdmin() {
@@ -1299,10 +1330,10 @@ const EcoNorma = (function() {
       if (res.ok) {
         state.adminToken = token;
         localStorage.setItem('econorma_admin_token', token);
-        showToast('Sesión administrativa iniciada', 'success');
+        showToast('Sesión administrativa iniciada correctamente', 'success');
         initAdminView();
       } else {
-        showToast('Clave de acceso incorrecta', 'error');
+        showToast('Clave de acceso administrativa incorrecta', 'error');
       }
     } catch (e) {
       showToast('Error al autenticar', 'error');
@@ -1316,9 +1347,604 @@ const EcoNorma = (function() {
     initAdminView();
   }
 
+  // --- GESTIÓN DE PARÁMETROS: CARGA, FILTROS Y TABLA ---
+
+  async function loadAdminParameters() {
+    const tbody = document.getElementById('adminParamsTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Consultando base de datos...</td></tr>`;
+
+    const searchInput = document.getElementById('adminParamSearchInput');
+    const filterInst = document.getElementById('adminFilterInstrument');
+    const filterMed = document.getElementById('adminFilterMedium');
+    const filterSec = document.getElementById('adminFilterSector');
+    const filterVer = document.getElementById('adminFilterVerif');
+    const filterNorm = document.getElementById('adminFilterNorm');
+    const filterStat = document.getElementById('adminFilterStatus');
+
+    const params = new URLSearchParams();
+    if (searchInput && searchInput.value.trim()) params.set('q', searchInput.value.trim());
+    if (filterInst && filterInst.value !== 'TODOS') params.set('instrument', filterInst.value);
+    if (filterMed && filterMed.value !== 'TODOS') params.set('medium', filterMed.value);
+    if (filterSec && filterSec.value !== 'TODOS') params.set('sector', filterSec.value);
+    if (filterVer && filterVer.value !== 'TODOS') params.set('verification_status', filterVer.value);
+    if (filterNorm && filterNorm.value !== 'TODOS') params.set('norm_code', filterNorm.value);
+    if (filterStat && filterStat.value !== 'TODOS') params.set('status', filterStat.value);
+
+    params.set('page', state.adminParamPage);
+    params.set('page_size', state.adminParamPageSize);
+
+    try {
+      const res = await fetch(`/api/admin/parameters?${params.toString()}`, {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const items = data.results || [];
+        state.adminParamTotal = data.total || 0;
+
+        if (items.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400">No se encontraron parámetros con los criterios seleccionados.</td></tr>`;
+          renderAdminParamPagination();
+          return;
+        }
+
+        tbody.innerHTML = items.map(p => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 text-xs border-b border-slate-100 dark:border-slate-800">
+            <td class="px-3 py-3 font-mono font-bold text-slate-400">${p.id}</td>
+            <td class="px-3 py-3">
+              <div class="font-bold text-slate-900 dark:text-white">${p.parameter_name}</div>
+              ${p.symbol ? `<span class="text-[11px] font-mono text-emerald-600 font-semibold">(${p.symbol})</span>` : ''}
+              ${p.cas_number ? `<span class="text-[10px] text-slate-400 block font-mono">CAS: ${p.cas_number}</span>` : ''}
+            </td>
+            <td class="px-3 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${getInstrumentBgClass(p.instrument)}">${p.instrument}</span>
+            </td>
+            <td class="px-3 py-3">
+              <div class="font-semibold text-slate-700 dark:text-slate-300">${p.environmental_medium}</div>
+              ${p.sector ? `<div class="text-[11px] text-slate-400">${p.sector}</div>` : ''}
+            </td>
+            <td class="px-3 py-3 max-w-xs">
+              <div class="font-medium text-slate-800 dark:text-slate-200 line-clamp-1">${p.category}</div>
+              ${p.subcategory ? `<div class="text-[11px] text-slate-400 line-clamp-1">${p.subcategory}</div>` : ''}
+            </td>
+            <td class="px-3 py-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">
+              ${p.value_text || formatParamValue(p)} <span class="text-[11px] font-semibold text-slate-500">${p.unit}</span>
+            </td>
+            <td class="px-3 py-3">
+              <div class="font-semibold text-slate-800 dark:text-slate-200">${p.norm_code}</div>
+              <div class="text-[10px] text-slate-400">${p.annex || ''}</div>
+            </td>
+            <td class="px-3 py-3">
+              ${getVerificationBadgeHtml(p.verification_status)}
+              <span class="text-[10px] text-slate-400 block mt-0.5">${p.status}</span>
+            </td>
+            <td class="px-3 py-3 text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick="EcoNorma.openParamDetail(${p.id})" title="Ver ficha técnica" class="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+                  <i data-lucide="eye" class="w-4 h-4"></i>
+                </button>
+                <button onclick="EcoNorma.openEditParamModal(${p.id})" title="Editar parámetro completo" class="p-1.5 text-sky-600 hover:text-sky-800 dark:text-sky-400 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                ${p.verification_status !== 'VERIFICADO' ? `
+                  <button onclick="EcoNorma.quickVerifyParam(${p.id})" title="Aprobar y verificar" class="p-1.5 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                  </button>
+                ` : ''}
+                <button onclick="EcoNorma.deleteParam(${p.id}, '${p.parameter_name.replace(/'/g, "\\'")}')" title="Desactivar o retirar" class="p-1.5 text-rose-600 hover:text-rose-800 dark:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+        renderAdminParamPagination();
+        if (window.lucide) window.lucide.createIcons();
+      }
+    } catch (e) {
+      console.warn('Error cargando parámetros admin:', e);
+    }
+  }
+
+  function renderAdminParamPagination() {
+    const container = document.getElementById('adminParamPagination');
+    if (!container) return;
+    const totalPages = Math.ceil(state.adminParamTotal / state.adminParamPageSize);
+
+    container.innerHTML = `
+      <span>Total: <strong>${state.adminParamTotal}</strong> parámetros registrados</span>
+      <div class="flex items-center space-x-2">
+        <button onclick="EcoNorma.changeAdminParamPage(${state.adminParamPage - 1})" ${state.adminParamPage <= 1 ? 'disabled' : ''} class="px-2.5 py-1 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40">Anterior</button>
+        <span>Página ${state.adminParamPage} de ${Math.max(1, totalPages)}</span>
+        <button onclick="EcoNorma.changeAdminParamPage(${state.adminParamPage + 1})" ${state.adminParamPage >= totalPages ? 'disabled' : ''} class="px-2.5 py-1 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40">Siguiente</button>
+      </div>
+    `;
+  }
+
+  function changeAdminParamPage(p) {
+    const totalPages = Math.ceil(state.adminParamTotal / state.adminParamPageSize);
+    if (p < 1 || p > totalPages) return;
+    state.adminParamPage = p;
+    loadAdminParameters();
+  }
+
+  // --- MODAL DE EDICIÓN Y CREACIÓN DE PARÁMETRO ---
+
+  function openNewParamModal() {
+    const modal = dom.adminParamModal;
+    if (!modal) return;
+    document.getElementById('adminParamModalTitle').innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5 text-brand-600"></i> Registrar Nuevo Parámetro Ambiental`;
+    document.getElementById('editParamId').value = '';
+    document.getElementById('adminParamForm').reset();
+    document.getElementById('editParamNormInheritedUrl').textContent = 'Selecciona una norma para visualizar su enlace oficial heredado.';
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function openEditParamModal(paramId) {
+    try {
+      const res = await fetch(`/api/admin/parameters/${paramId}`, {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const p = await res.json();
+        const modal = dom.adminParamModal;
+        if (!modal) return;
+
+        document.getElementById('adminParamModalTitle').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-brand-600"></i> Editar Parámetro Ambiental (ID: ${p.id})`;
+        document.getElementById('editParamId').value = p.id;
+        
+        document.getElementById('editParamName').value = p.parameter_name || '';
+        document.getElementById('editParamAltNames').value = p.alternative_names || '';
+        document.getElementById('editParamSymbol').value = p.symbol || '';
+        document.getElementById('editParamCas').value = p.cas_number || '';
+        
+        document.getElementById('editParamInstrument').value = p.instrument || 'ECA';
+        document.getElementById('editParamMedium').value = p.environmental_medium || '';
+        document.getElementById('editParamSector').value = p.sector || '';
+        document.getElementById('editParamCategory').value = p.category || '';
+        document.getElementById('editParamSubcategory').value = p.subcategory || '';
+        
+        document.getElementById('editParamLimitType').value = p.limit_type || 'Máximo';
+        document.getElementById('editParamMinVal').value = p.min_value !== null ? p.min_value : '';
+        document.getElementById('editParamMaxVal').value = p.max_value !== null ? p.max_value : '';
+        document.getElementById('editParamValText').value = p.value_text || '';
+        document.getElementById('editParamUnit').value = p.unit || '';
+        
+        document.getElementById('editParamNormCode').value = p.norm_code || '';
+        document.getElementById('editParamAnnex').value = p.annex || '';
+        document.getElementById('editParamObservations').value = p.observations || '';
+        document.getElementById('editParamSourceOverride').value = p.source_url_override || '';
+
+        onNormSelectionChange();
+
+        document.getElementById('editParamVerifStatus').value = p.verification_status || 'VERIFICADO';
+        document.getElementById('editParamStatus').value = p.status || 'VIGENTE';
+        document.getElementById('editParamAdminComment').value = '';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) window.lucide.createIcons();
+      }
+    } catch (e) {
+      showToast('Error al cargar datos del parámetro para edición', 'error');
+    }
+  }
+
+  function closeAdminParamModal() {
+    if (dom.adminParamModal) {
+      dom.adminParamModal.classList.add('hidden');
+      dom.adminParamModal.classList.remove('flex');
+    }
+  }
+
+  function onNormSelectionChange() {
+    const normSelect = document.getElementById('editParamNormCode');
+    const inheritedUrlEl = document.getElementById('editParamNormInheritedUrl');
+    if (!normSelect || !inheritedUrlEl) return;
+
+    const selectedCode = normSelect.value;
+    const normObj = state.adminNormsList.find(n => n.code === selectedCode);
+    if (normObj) {
+      inheritedUrlEl.textContent = normObj.official_url || 'Sin URL registrada';
+    } else {
+      inheritedUrlEl.textContent = 'Selecciona una norma oficial para heredar su URL';
+    }
+  }
+
+  function setUnitQuick(unitStr) {
+    const unitInput = document.getElementById('editParamUnit');
+    if (unitInput) {
+      unitInput.value = unitStr;
+      unitInput.focus();
+    }
+  }
+
+  function testUrl(url) {
+    if (!url || url.trim() === '' || url.includes('Selecciona')) {
+      showToast('Por favor introduce primero una URL válida para probar.', 'warning');
+      return;
+    }
+    const clean = url.trim();
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+      showToast('La URL debe comenzar con http:// o https://', 'warning');
+      return;
+    }
+    window.open(clean, '_blank');
+  }
+
+  async function saveParamForm(e) {
+    e.preventDefault();
+    const paramId = document.getElementById('editParamId').value;
+    const isNew = !paramId;
+
+    const confirmMsg = isNew 
+      ? "¿Deseas registrar este nuevo parámetro en la base de datos oficial?"
+      : "¿Deseas guardar las modificaciones realizadas en este registro?";
+
+    if (!confirm(confirmMsg)) return;
+
+    const minValStr = document.getElementById('editParamMinVal').value;
+    const maxValStr = document.getElementById('editParamMaxVal').value;
+    const normCode = document.getElementById('editParamNormCode').value;
+    const normObj = state.adminNormsList.find(n => n.code === normCode) || {};
+
+    const payload = {
+      parameter_name: document.getElementById('editParamName').value.trim(),
+      alternative_names: document.getElementById('editParamAltNames').value.trim() || null,
+      symbol: document.getElementById('editParamSymbol').value.trim() || null,
+      cas_number: document.getElementById('editParamCas').value.trim() || null,
+      instrument: document.getElementById('editParamInstrument').value,
+      environmental_medium: document.getElementById('editParamMedium').value.trim(),
+      sector: document.getElementById('editParamSector').value.trim() || null,
+      category: document.getElementById('editParamCategory').value.trim(),
+      subcategory: document.getElementById('editParamSubcategory').value.trim() || null,
+      limit_type: document.getElementById('editParamLimitType').value,
+      min_value: minValStr !== '' ? parseFloat(minValStr) : null,
+      max_value: maxValStr !== '' ? parseFloat(maxValStr) : null,
+      value_text: document.getElementById('editParamValText').value.trim() || null,
+      unit: document.getElementById('editParamUnit').value.trim(),
+      norm_code: normCode,
+      norm_name: normObj.title || normCode,
+      year: normObj.year || new Date().getFullYear(),
+      issuing_entity: normObj.issuing_entity || 'MINAM',
+      annex: document.getElementById('editParamAnnex').value.trim() || null,
+      observations: document.getElementById('editParamObservations').value.trim() || null,
+      source_url_override: document.getElementById('editParamSourceOverride').value.trim() || null,
+      verification_status: document.getElementById('editParamVerifStatus').value,
+      status: document.getElementById('editParamStatus').value,
+      admin_comment: document.getElementById('editParamAdminComment').value.trim() || null
+    };
+
+    try {
+      const url = isNew ? '/api/admin/parameters' : `/api/admin/parameters/${paramId}`;
+      const method = isNew ? 'POST' : 'PUT';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': state.adminToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        showToast(data.message || 'Parámetro guardado exitosamente', 'success');
+        closeAdminParamModal();
+        loadAdminParameters();
+        fetchSystemStats();
+      } else {
+        const err = await res.json();
+        showToast(`Error al guardar: ${err.detail || 'Verifica los campos'}`, 'error');
+      }
+    } catch (e) {
+      showToast('Error de conexión con el servidor', 'error');
+    }
+  }
+
+  async function verifyParamCurrentModal() {
+    const paramId = document.getElementById('editParamId').value;
+    if (!paramId) {
+      document.getElementById('editParamVerifStatus').value = 'VERIFICADO';
+      showToast('Estado cambiado a Verificado. Guarda el formulario para confirmar.', 'info');
+      return;
+    }
+    await quickVerifyParam(parseInt(paramId, 10));
+    closeAdminParamModal();
+  }
+
+  async function quickVerifyParam(id) {
+    try {
+      const res = await fetch(`/api/admin/parameters/${id}/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': state.adminToken
+        },
+        body: JSON.stringify({ comment: 'Verificación manual aprobada por el administrador' })
+      });
+
+      if (res.ok) {
+        showToast('Parámetro marcado como Verificado y publicado exitosamente', 'success');
+        loadAdminParameters();
+        loadAdminPendingVerification();
+        fetchSystemStats();
+      } else {
+        showToast('Error al verificar el parámetro', 'error');
+      }
+    } catch (e) {
+      showToast('Error de conexión', 'error');
+    }
+  }
+
+  async function deleteParam(id, name) {
+    if (!confirm(`¿Estás seguro de que deseas retirar el parámetro "${name}" (ID ${id})? Quedará marcado como inactivo.`)) return;
+
+    try {
+      const res = await fetch(`/api/admin/parameters/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': state.adminToken }
+      });
+
+      if (res.ok) {
+        showToast(`Parámetro ID ${id} desactivado correctamente`, 'info');
+        loadAdminParameters();
+        fetchSystemStats();
+      } else {
+        showToast('No se pudo desactivar el parámetro', 'error');
+      }
+    } catch (e) {
+      showToast('Error de conexión', 'error');
+    }
+  }
+
+  // --- GESTIÓN DE NORMAS (CRUD Y ACTUALIZACIÓN PROPAGADA) ---
+
+  async function loadAdminNorms() {
+    const tbody = document.getElementById('adminNormsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400">Consultando catálogo de normas...</td></tr>`;
+
+    const searchInput = document.getElementById('adminNormSearchInput');
+    const q = searchInput ? searchInput.value.trim() : '';
+
+    try {
+      const res = await fetch(`/api/admin/norms?q=${encodeURIComponent(q)}`, {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        state.adminNormsList = data.norms || [];
+
+        if (state.adminNormsList.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400">No se encontraron normas registradas.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = state.adminNormsList.map(n => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 text-xs border-b border-slate-100 dark:border-slate-800">
+            <td class="px-4 py-3 font-mono font-bold text-slate-900 dark:text-white">${n.code}</td>
+            <td class="px-4 py-3">
+              <span class="font-semibold text-slate-700 dark:text-slate-300">${n.norm_type || 'Decreto Supremo'}</span>
+              <div class="text-[10px] font-mono text-slate-400">${n.norm_number}</div>
+            </td>
+            <td class="px-4 py-3 max-w-sm">
+              <div class="font-medium text-slate-800 dark:text-slate-200 line-clamp-2">${n.title}</div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="font-semibold text-slate-700 dark:text-slate-300">${n.issuing_entity}</div>
+              <div class="text-[10px] text-slate-400">${n.year}</div>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${getStatusBadgeClass(n.status)}">${n.status}</span>
+            </td>
+            <td class="px-4 py-3 max-w-xs">
+              <div class="flex items-center gap-1.5">
+                <a href="${n.official_url}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:underline font-mono truncate block max-w-[160px] text-[11px]" title="${n.official_url}">
+                  ${n.official_url}
+                </a>
+                <button onclick="EcoNorma.testUrl('${n.official_url}')" title="Probar enlace" class="p-1 text-slate-400 hover:text-emerald-600">
+                  <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </td>
+            <td class="px-4 py-3 font-mono font-bold text-center text-slate-700 dark:text-slate-300">
+              ${n.parameters_count || 0}
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick="EcoNorma.openEditNormModal('${n.code}')" title="Editar norma y corregir URL" class="p-1.5 text-sky-600 hover:text-sky-800 rounded-lg hover:bg-sky-50 dark:hover:bg-sky-950">
+                  <i data-lucide="edit-3" class="w-4 h-4"></i>
+                </button>
+                <button onclick="EcoNorma.filterParamsByNorm('${n.code}')" title="Ver todos sus parámetros" class="p-1.5 text-emerald-600 hover:text-emerald-800 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+    } catch (e) {
+      console.warn('Error cargando normas admin:', e);
+    }
+  }
+
+  function filterParamsByNorm(normCode) {
+    switchAdminSubTab('parametros');
+    const normSelect = document.getElementById('adminFilterNorm');
+    if (normSelect) {
+      normSelect.value = normCode;
+      loadAdminParameters();
+    }
+  }
+
+  function openNewNormModal() {
+    const modal = dom.adminNormModal;
+    if (!modal) return;
+
+    document.getElementById('adminNormModalTitle').innerHTML = `<i data-lucide="plus-circle" class="w-5 h-5 text-brand-600"></i> Registrar Nueva Norma Oficial`;
+    document.getElementById('editNormIsNew').value = '1';
+    document.getElementById('adminNormForm').reset();
+    document.getElementById('editNormCode').removeAttribute('readonly');
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  async function openEditNormModal(normCode) {
+    try {
+      const res = await fetch(`/api/admin/norms/${encodeURIComponent(normCode)}`, {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const n = await res.json();
+        const modal = dom.adminNormModal;
+        if (!modal) return;
+
+        document.getElementById('adminNormModalTitle').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5 text-brand-600"></i> Editar Norma Oficial (${n.code})`;
+        document.getElementById('editNormIsNew').value = '0';
+        
+        document.getElementById('editNormCode').value = n.code;
+        document.getElementById('editNormCode').setAttribute('readonly', 'true');
+        document.getElementById('editNormType').value = n.norm_type || 'Decreto Supremo';
+        document.getElementById('editNormNumber').value = n.norm_number || '';
+        document.getElementById('editNormEntity').value = n.issuing_entity || '';
+        document.getElementById('editNormInstrument').value = n.instrument || 'ECA';
+        document.getElementById('editNormYear').value = n.year || '';
+        document.getElementById('editNormTitle').value = n.title || '';
+        document.getElementById('editNormOfficialUrl').value = n.official_url || '';
+        document.getElementById('editNormAlternateUrl').value = n.alternate_url || '';
+        document.getElementById('editNormStatus').value = n.status || 'VIGENTE';
+        document.getElementById('editNormSummary').value = n.summary || '';
+        document.getElementById('editNormAdminComment').value = '';
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) window.lucide.createIcons();
+      }
+    } catch (e) {
+      showToast('Error al cargar datos de la norma para edición', 'error');
+    }
+  }
+
+  function closeAdminNormModal() {
+    if (dom.adminNormModal) {
+      dom.adminNormModal.classList.add('hidden');
+      dom.adminNormModal.classList.remove('flex');
+    }
+  }
+
+  async function saveNormForm(e) {
+    e.preventDefault();
+    const isNew = document.getElementById('editNormIsNew').value === '1';
+    const normCode = document.getElementById('editNormCode').value.trim();
+
+    const confirmMsg = isNew
+      ? "¿Deseas registrar esta nueva norma oficial en el sistema?"
+      : "¿Deseas guardar los cambios en esta norma? Todos los parámetros vinculados adoptarán automáticamente la nueva URL oficial.";
+
+    if (!confirm(confirmMsg)) return;
+
+    const payload = {
+      code: normCode,
+      norm_type: document.getElementById('editNormType').value,
+      norm_number: document.getElementById('editNormNumber').value.trim(),
+      title: document.getElementById('editNormTitle').value.trim(),
+      issuing_entity: document.getElementById('editNormEntity').value.trim(),
+      instrument: document.getElementById('editNormInstrument').value,
+      year: parseInt(document.getElementById('editNormYear').value, 10) || new Date().getFullYear(),
+      official_url: document.getElementById('editNormOfficialUrl').value.trim(),
+      alternate_url: document.getElementById('editNormAlternateUrl').value.trim() || null,
+      status: document.getElementById('editNormStatus').value,
+      summary: document.getElementById('editNormSummary').value.trim() || null,
+      admin_comment: document.getElementById('editNormAdminComment').value.trim() || null
+    };
+
+    try {
+      const url = isNew ? '/api/admin/norms' : `/api/admin/norms/${encodeURIComponent(normCode)}`;
+      const method = isNew ? 'POST' : 'PUT';
+
+      const res = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': state.adminToken
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        showToast(data.message || 'Norma guardada exitosamente', 'success');
+        closeAdminNormModal();
+        await preloadAdminNormsCatalog();
+        loadAdminNorms();
+      } else {
+        const err = await res.json();
+        showToast(`Error al guardar norma: ${err.detail || 'Verifica los campos'}`, 'error');
+      }
+    } catch (e) {
+      showToast('Error de conexión con el servidor', 'error');
+    }
+  }
+
+  // --- HISTORIAL DE AUDITORÍA Y TRAZABILIDAD ---
+
+  async function loadAdminAuditLogs() {
+    const tbody = document.getElementById('adminAuditLogsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">Consultando historial de auditoría...</td></tr>`;
+
+    try {
+      const res = await fetch('/api/admin/audit-logs?limit=150', {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const logs = data.logs || [];
+        if (logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No hay registros de modificaciones aún.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 text-xs border-b border-slate-100 dark:border-slate-800">
+            <td class="px-3 py-2.5 font-mono text-[11px] text-slate-400">${l.created_at}</td>
+            <td class="px-3 py-2.5">
+              <span class="font-bold text-slate-800 dark:text-slate-200">${l.target_name || l.target_id}</span>
+              <span class="text-[10px] text-slate-400 block">${l.target_type} #${l.target_id}</span>
+            </td>
+            <td class="px-3 py-2.5 font-bold font-mono text-emerald-600">${l.action}</td>
+            <td class="px-3 py-2.5 font-mono text-slate-500">${l.field_name || '-'}</td>
+            <td class="px-3 py-2.5 font-mono text-rose-600 dark:text-rose-400 line-through truncate max-w-xs">${l.old_value || '-'}</td>
+            <td class="px-3 py-2.5 font-mono text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-xs">${l.new_value || '-'}</td>
+            <td class="px-3 py-2.5 text-slate-500 text-[11px]">${l.comment || 'Modificación manual'}</td>
+          </tr>
+        `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
+      }
+    } catch (e) {
+      console.warn('Error cargando auditoría:', e);
+    }
+  }
+
+  // --- PENDIENTES DE VERIFICACIÓN ---
+
   async function loadAdminPendingVerification() {
     const container = document.getElementById('adminPendingContainer');
     if (!container) return;
+    container.innerHTML = `<div class="py-6 text-center text-slate-400 text-xs">Cargando cola de verificación...</div>`;
 
     try {
       const res = await fetch('/api/admin/pending-verification', {
@@ -1331,20 +1957,32 @@ const EcoNorma = (function() {
           container.innerHTML = `
             <div class="py-8 text-center text-slate-500">
               <i data-lucide="check-check" class="w-8 h-8 text-emerald-500 mx-auto mb-2"></i>
-              No hay parámetros pendientes de verificación en la base de datos.
+              ¡Todo al día! No hay parámetros pendientes de verificación o en revisión.
             </div>
           `;
         } else {
           container.innerHTML = items.map(p => `
-            <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
               <div>
-                <span class="font-bold text-slate-900 dark:text-white">${p.parameter_name}</span>
-                <span class="text-xs text-slate-400"> (${p.instrument} - ${p.category})</span>
-                <div class="text-xs text-amber-600 font-semibold mt-0.5">Estado: ${p.verification_status}</div>
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-sm text-slate-900 dark:text-white">${p.parameter_name}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getInstrumentBgClass(p.instrument)}">${p.instrument}</span>
+                  ${getVerificationBadgeHtml(p.verification_status)}
+                </div>
+                <div class="text-slate-500 mt-1">
+                  Categoría: <strong>${p.category}</strong> ${p.subcategory ? `· ${p.subcategory}` : ''} | Límite: <strong>${p.value_text || formatParamValue(p)} ${p.unit}</strong> (${p.norm_code})
+                </div>
+                ${p.admin_comment ? `<div class="text-[11px] text-amber-600 mt-0.5">Nota: ${p.admin_comment}</div>` : ''}
               </div>
-              <button onclick="EcoNorma.approveVerification(${p.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold">
-                Marcar como Verificado
-              </button>
+
+              <div class="flex items-center gap-2 self-end sm:self-center">
+                <button onclick="EcoNorma.openEditParamModal(${p.id})" class="px-3 py-1.5 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-xl font-bold flex items-center gap-1 border border-sky-200">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Revisar y Editar
+                </button>
+                <button onclick="EcoNorma.quickVerifyParam(${p.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm flex items-center gap-1">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Aprobar
+                </button>
+              </div>
             </div>
           `).join('');
         }
@@ -1354,6 +1992,80 @@ const EcoNorma = (function() {
       console.warn('Error cargando pendientes admin:', e);
     }
   }
+
+  // --- MENSAJES Y OBSERVACIONES ---
+
+  async function loadAdminInquiries() {
+    const container = document.getElementById('adminInquiriesContainer');
+    if (!container) return;
+    container.innerHTML = `<div class="py-6 text-center text-slate-400 text-xs">Cargando observaciones...</div>`;
+
+    try {
+      const res = await fetch('/api/admin/inquiries', {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const inqs = data.inquiries || [];
+        if (inqs.length === 0) {
+          container.innerHTML = `<div class="py-8 text-center text-slate-400 text-xs">No hay observaciones recibidas aún.</div>`;
+          return;
+        }
+        container.innerHTML = inqs.map(i => `
+          <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-900 dark:text-white text-sm">${i.name} (${i.email})</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">${i.inquiry_type}</span>
+            </div>
+            <div class="font-semibold text-slate-700 dark:text-slate-300">Asunto: ${i.subject || 'Sin asunto'}</div>
+            <p class="text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800">${i.message}</p>
+            <div class="text-[10px] text-slate-400">Fecha de recepción: ${i.created_at}</div>
+          </div>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn('Error cargando mensajes:', e);
+    }
+  }
+
+  // --- IMPORTACIÓN POR LOTE ---
+
+  async function submitImportFile(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('adminImportFileInput');
+    if (!fileInput || !fileInput.files[0]) {
+      showToast('Selecciona un archivo .csv o .json', 'warning');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    showToast('Validando e importando archivo...', 'info');
+
+    try {
+      const res = await fetch('/api/admin/import', {
+        method: 'POST',
+        headers: { 'x-admin-token': state.adminToken },
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        showToast(data.message || 'Importación completada', 'success');
+        fileInput.value = '';
+        fetchSystemStats();
+        switchAdminSubTab('parametros');
+      } else {
+        const err = await res.json();
+        showToast(`Error de importación: ${err.detail}`, 'error');
+      }
+    } catch (e) {
+      showToast('Error al procesar la importación', 'error');
+    }
+  }
+
+  // --- RESPALDO JSON ---
 
   async function downloadBackup() {
     try {
@@ -1376,7 +2088,8 @@ const EcoNorma = (function() {
     }
   }
 
-  // --- Exportar y Compartir ---
+  // --- UTILIDADES PÚBLICAS Y EVENTOS ---
+
   function exportFilteredCsv() {
     const params = new URLSearchParams();
     if (state.query) params.set('q', state.query);
@@ -1428,7 +2141,6 @@ const EcoNorma = (function() {
     executeSearch();
   }
 
-  // --- Toast Notifications ---
   function showToast(message, type = 'info') {
     if (!dom.toastContainer) return;
     const toast = document.createElement('div');
@@ -1446,7 +2158,7 @@ const EcoNorma = (function() {
       icon = 'alert-triangle';
     }
 
-    toast.className = `${bg} px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0`;
+    toast.className = `${bg} px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-2.5 text-xs font-semibold transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
     toast.innerHTML = `
       <i data-lucide="${icon}" class="w-4 h-4 flex-shrink-0"></i>
       <span>${message}</span>
@@ -1455,21 +2167,16 @@ const EcoNorma = (function() {
     dom.toastContainer.appendChild(toast);
     if (window.lucide) window.lucide.createIcons();
 
-    setTimeout(() => {
-      toast.classList.remove('translate-y-2', 'opacity-0');
-    }, 10);
-
+    setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
     setTimeout(() => {
       toast.classList.add('opacity-0', 'translate-y-2');
       setTimeout(() => toast.remove(), 300);
     }, 3500);
   }
 
-  // --- Vinculación de Eventos ---
   function bindEvents() {
     if (dom.themeToggle) dom.themeToggle.addEventListener('click', toggleTheme);
 
-    // Navegación
     dom.navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1484,7 +2191,6 @@ const EcoNorma = (function() {
       });
     }
 
-    // Buscador principal
     if (dom.mainSearchInput) {
       dom.mainSearchInput.addEventListener('input', onSearchInput);
       dom.mainSearchInput.addEventListener('keydown', (e) => {
@@ -1507,7 +2213,6 @@ const EcoNorma = (function() {
       });
     }
 
-    // Chips rápidos de búsqueda
     dom.quickChips.forEach(chip => {
       chip.addEventListener('click', () => {
         const val = chip.getAttribute('data-search');
@@ -1517,7 +2222,6 @@ const EcoNorma = (function() {
       });
     });
 
-    // Filtros dropdown
     const filterEls = [
       { el: dom.filterInstrument, key: 'instrument' },
       { el: dom.filterMedium, key: 'medium' },
@@ -1541,7 +2245,6 @@ const EcoNorma = (function() {
     if (dom.exportCsvBtn) dom.exportCsvBtn.addEventListener('click', exportFilteredCsv);
     if (dom.shareQueryBtn) dom.shareQueryBtn.addEventListener('click', shareCurrentQuery);
 
-    // Switch de vista (Cards / Table)
     if (dom.viewCardsBtn && dom.viewTableBtn) {
       dom.viewCardsBtn.addEventListener('click', () => {
         state.viewMode = 'cards';
@@ -1557,23 +2260,27 @@ const EcoNorma = (function() {
       });
     }
 
-    // Modal
-    if (dom.closeDetailModalBtn) dom.closeDetailModalBtn.addEventListener('click', closeDetailModal);
     if (dom.detailModal) {
       dom.detailModal.addEventListener('click', (e) => {
         if (e.target === dom.detailModal) closeDetailModal();
       });
     }
 
-    // Comparador
     const compEvaluateBtn = document.getElementById('compEvaluateBtn');
     if (compEvaluateBtn) compEvaluateBtn.addEventListener('click', evaluateCompliance);
 
-    // Contact Form
     const contactForm = document.getElementById('contactForm');
     if (contactForm) contactForm.addEventListener('submit', submitContactForm);
 
-    // Cerrar autocomplete al hacer clic afuera
+    const adminParamForm = document.getElementById('adminParamForm');
+    if (adminParamForm) adminParamForm.addEventListener('submit', saveParamForm);
+
+    const adminNormForm = document.getElementById('adminNormForm');
+    if (adminNormForm) adminNormForm.addEventListener('submit', saveNormForm);
+
+    const adminImportForm = document.getElementById('adminImportForm');
+    if (adminImportForm) adminImportForm.addEventListener('submit', submitImportFile);
+
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#mainSearchInput') && !e.target.closest('#autocompleteDropdown')) {
         hideAutocomplete();
@@ -1581,7 +2288,6 @@ const EcoNorma = (function() {
     });
   }
 
-  // API Pública de EcoNorma
   return {
     init,
     navigateTo,
@@ -1597,7 +2303,29 @@ const EcoNorma = (function() {
     logoutAdmin,
     downloadBackup,
     loadInterCategoryComparison,
-    evaluateCompliance
+    evaluateCompliance,
+    switchAdminSubTab,
+    loadAdminParameters,
+    changeAdminParamPage,
+    openNewParamModal,
+    openEditParamModal,
+    closeAdminParamModal,
+    saveParamForm,
+    verifyParamCurrentModal,
+    quickVerifyParam,
+    deleteParam,
+    setUnitQuick,
+    testUrl,
+    onNormSelectionChange,
+    loadAdminNorms,
+    openNewNormModal,
+    openEditNormModal,
+    closeAdminNormModal,
+    saveNormForm,
+    filterParamsByNorm,
+    loadAdminAuditLogs,
+    loadAdminPendingVerification,
+    onSearchInput
   };
 })();
 
