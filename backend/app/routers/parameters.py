@@ -23,6 +23,7 @@ def search_params(
     category: Optional[str] = Query(None, description="Categoría normativa"),
     subcategory: Optional[str] = Query(None, description="Subcategoría específica"),
     status: Optional[str] = Query(None, description="VIGENTE / MODIFICADO / DEROGADO"),
+    verification_status: Optional[str] = Query(None),
     norm_code: Optional[str] = Query(None, description="Código de la norma"),
     entity: Optional[str] = Query(None, description="Entidad emisora"),
     year: Optional[int] = Query(None, description="Año de la norma"),
@@ -37,11 +38,13 @@ def search_params(
         category=category,
         subcategory=subcategory,
         status=status,
+        verification_status=verification_status,
         norm_code=norm_code,
         issuing_entity=entity,
         year=year,
         page=page,
-        page_size=page_size
+        page_size=page_size,
+        is_admin=False  # Búsqueda pública: excluye 'NO PUBLICAR' e 'INACTIVO'
     )
     return {
         "total": total,
@@ -83,7 +86,8 @@ def export_csv(
         sector=sector,
         category=category,
         page=1,
-        page_size=10000
+        page_size=10000,
+        is_admin=False
     )
     
     output = io.StringIO()
@@ -91,23 +95,26 @@ def export_csv(
     
     headers = [
         "ID", "Instrumento", "Medio Ambiental", "Sector", "Subsector", "Categoría",
-        "Subcategoría", "Parámetro", "Símbolo", "CAS", "Valor Mínimo", "Valor Máximo",
-        "Valor Texto", "Unidad", "Periodo", "Método", "Observaciones",
-        "Código Norma", "Nombre Norma", "Año", "Anexo", "Entidad Emisora",
-        "Estado", "URL Oficial"
+        "Subcategoría", "Parámetro", "Símbolo", "CAS", "Tipo Límite", "Valor Mínimo", "Valor Máximo",
+        "Valor Texto", "Unidad", "Periodo", "Condición Especial", "Método", "Observaciones",
+        "Código Norma", "Nombre Norma", "Año", "Anexo", "Tabla", "Entidad Emisora",
+        "Estado", "Estado Verificación", "URL Oficial"
     ]
     writer.writerow(headers)
     
     for r in results:
         writer.writerow([
-            r["id"], r["instrument"], r["environmental_medium"], r["sector"] or "", r["subsector"] or "",
-            r["category"], r["subcategory"] or "", r["parameter_name"], r["symbol"] or "", r["cas_number"] or "",
-            r["min_value"] if r["min_value"] is not None else "",
-            r["max_value"] if r["max_value"] is not None else "",
-            r["value_text"] or "", r["unit"], r["evaluation_period"] or "",
-            r["method_criteria"] or "", r["observations"] or "",
-            r["norm_code"], r["norm_name"], r["year"], r["annex"] or "",
-            r["issuing_entity"], r["status"], r["official_url"]
+            r["id"], r["instrument"], r["environmental_medium"], r.get("sector") or "", r.get("subsector") or "",
+            r["category"], r.get("subcategory") or "", r["parameter_name"], r.get("symbol") or "", r.get("cas_number") or "",
+            r.get("limit_type") or "",
+            r["min_value"] if r.get("min_value") is not None else "",
+            r["max_value"] if r.get("max_value") is not None else "",
+            r.get("value_text") or "", r["unit"], r.get("evaluation_period") or "",
+            r.get("special_condition") or "",
+            r.get("method_criteria") or "", r.get("observations") or "",
+            r["norm_code"], r.get("norm_name") or "", r.get("year") or "", r.get("annex") or "", r.get("table_ref") or "",
+            r.get("issuing_entity") or "", r.get("status") or "", r.get("verification_status") or "",
+            r.get("official_url") or ""
         ])
     
     output.seek(0)
