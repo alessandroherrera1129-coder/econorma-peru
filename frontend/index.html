@@ -202,21 +202,10 @@
               <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="pH">pH</button>
               <button class="quick-chip px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-400 text-slate-700 dark:text-slate-300 font-semibold transition-all shadow-sm" data-search="Ruido">Ruido</button>
             </div>
-
-            <!-- Call to Actions -->
-            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
-              <a href="#busqueda" onclick="EcoNorma.navigateTo('busqueda')" class="px-6 py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-2xl shadow-lg shadow-brand-700/20 flex items-center gap-2 transition-all hover:scale-102">
-                <i data-lucide="layers" class="w-5 h-5"></i> Explorar Estándares
-              </a>
-              <a href="#comparador" onclick="EcoNorma.navigateTo('comparador')" class="px-6 py-3.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-hydro-500 text-slate-800 dark:text-slate-100 font-bold rounded-2xl shadow-sm flex items-center gap-2 transition-all">
-                <i data-lucide="scale" class="w-5 h-5 text-hydro-600"></i> Comparador Ambiental
-              </a>
-            </div>
-
           </div>
 
-          <!-- Hero Graphic -->
-          <div class="lg:col-span-5 flex justify-center">
+          <!-- Hero Composition Illustration -->
+          <div class="lg:col-span-5 flex items-center justify-center">
             <div class="w-full max-w-lg pulse-ambient">
               <img src="/static/img/hero-illustration.svg" alt="Ilustración EcoNorma Perú" class="w-full h-auto drop-shadow-2xl">
             </div>
@@ -739,23 +728,29 @@
     </section>
 
     <!-- ============================================================= -->
-    <!-- VISTA 7: PANEL ADMINISTRATIVO (/admin) -->
+    <!-- VISTA 7: PANEL ADMINISTRATIVO Y GESTOR CRUD INTEGRAL (/admin) -->
     <!-- ============================================================= -->
-    <section id="view-admin" class="hidden max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <section id="view-admin" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
       <!-- Login Box -->
       <div id="adminLoginBox" class="max-w-md mx-auto glass-card rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 text-center">
-        <div class="w-16 h-16 bg-brand-100 dark:bg-brand-950 text-brand-600 rounded-2xl flex items-center justify-center mx-auto">
-          <i data-lucide="lock" class="w-8 h-8"></i>
+        <div class="w-16 h-16 bg-brand-100 dark:bg-brand-950 text-brand-600 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
         </div>
         <div>
-          <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Panel Administrativo</h3>
-          <p class="text-xs text-slate-500 mt-1">Ingresa tu clave de acceso autorizada para gestionar la base de datos.</p>
+          <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white">Panel de Control Normativo</h3>
+          <p class="text-xs text-slate-500 mt-1">Ingresa tu clave de acceso autorizada para gestionar y revisar la base de datos.</p>
         </div>
         <div class="space-y-4">
-          <input type="password" id="adminTokenInput" placeholder="Clave de administración" class="w-full p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-sm font-mono focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white">
-          <button onclick="EcoNorma.loginAdmin()" class="w-full py-3.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-md transition-colors">
-            Acceder al Panel
+          <input 
+            type="password" 
+            id="adminTokenInput" 
+            placeholder="Clave de administración" 
+            class="w-full p-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-sm font-mono focus:outline-none focus:border-brand-500 text-slate-900 dark:text-white"
+            onkeydown="if(event.key==='Enter') EcoNorma.loginAdmin()"
+          >
+          <button onclick="EcoNorma.loginAdmin()" class="w-full py-3.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2">
+            <i data-lucide="unlock" class="w-4 h-4"></i> Acceder al Panel
           </button>
         </div>
       </div>
@@ -763,29 +758,311 @@
       <!-- Dashboard View (Protected) -->
       <div id="adminDashboard" class="hidden space-y-6">
         
-        <div class="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+        <!-- Admin Header Toolbar -->
+        <div class="glass-panel rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <i data-lucide="shield-check" class="w-6 h-6 text-brand-600"></i> Gestión de EcoNorma Perú
-            </h2>
-            <p class="text-xs text-slate-500">Mantenimiento de parámetros, normas e importación de datos oficiales.</p>
+            <div class="flex items-center gap-2.5">
+              <span class="p-2 rounded-xl bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300">
+                <i data-lucide="sliders" class="w-5 h-5"></i>
+              </span>
+              <div>
+                <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white">
+                  Gestión y Control Normativo
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Edición integral, corrección de URLs oficiales, trazabilidad y verificación de ECA, LMP y VMA.
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <button onclick="EcoNorma.downloadBackup()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
-              <i data-lucide="archive" class="w-4 h-4"></i> Descargar Respaldo
+
+          <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="EcoNorma.downloadBackup()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="archive" class="w-3.5 h-3.5 text-emerald-600"></i> Descargar Respaldo JSON
             </button>
-            <button onclick="EcoNorma.logoutAdmin()" class="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-bold transition-colors">
-              Cerrar Sesión
+            <button onclick="EcoNorma.logoutAdmin()" class="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Cerrar Sesión
             </button>
           </div>
         </div>
 
-        <!-- Admin Pending Verification Queue -->
-        <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <i data-lucide="clock" class="w-5 h-5 text-amber-500"></i> Parámetros Pendientes de Verificación
-          </h3>
-          <div id="adminPendingContainer" class="space-y-2"></div>
+        <!-- Admin Sub-Tabs Navigation Strip -->
+        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+          <button onclick="EcoNorma.switchAdminSubTab('parametros')" data-admin-tab="parametros" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-brand-600 text-white shadow-sm">
+            <i data-lucide="layers" class="w-4 h-4"></i> Gestión de Parámetros
+          </button>
+          <button onclick="EcoNorma.switchAdminSubTab('normas')" data-admin-tab="normas" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            <i data-lucide="file-text" class="w-4 h-4"></i> Gestión de Normas
+          </button>
+          <button onclick="EcoNorma.switchAdminSubTab('pendientes')" data-admin-tab="pendientes" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i> Pendientes y Revisión
+          </button>
+          <button onclick="EcoNorma.switchAdminSubTab('historial')" data-admin-tab="historial" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            <i data-lucide="history" class="w-4 h-4"></i> Historial de Cambios
+          </button>
+          <button onclick="EcoNorma.switchAdminSubTab('mensajes')" data-admin-tab="mensajes" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            <i data-lucide="mail" class="w-4 h-4"></i> Observaciones de Usuarios
+          </button>
+          <button onclick="EcoNorma.switchAdminSubTab('importar')" data-admin-tab="importar" class="admin-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
+            <i data-lucide="upload" class="w-4 h-4"></i> Importar CSV / JSON
+          </button>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 1: GESTIÓN DE PARÁMETROS -->
+        <!-- ========================================== -->
+        <div id="adminSectionParametros" class="space-y-4">
+          
+          <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+            <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+              
+              <!-- Search Bar -->
+              <div class="relative flex-grow">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input 
+                  type="text" 
+                  id="adminParamSearchInput"
+                  oninput="EcoNorma.loadAdminParameters()"
+                  placeholder="Buscar parámetro, norma, sector, categoría o instrumento..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
+                >
+              </div>
+
+              <!-- Action Button: Add New Param -->
+              <div class="flex items-center gap-2">
+                <button onclick="EcoNorma.openNewParamModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+                  <i data-lucide="plus" class="w-4 h-4"></i> Nuevo Parámetro
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Instrumento</label>
+                <select id="adminFilterInstrument" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos (ECA/LMP/VMA)</option>
+                  <option value="ECA">ECA</option>
+                  <option value="LMP">LMP</option>
+                  <option value="VMA">VMA</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Medio</label>
+                <select id="adminFilterMedium" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Sector</label>
+                <select id="adminFilterSector" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Verificación</label>
+                <select id="adminFilterVerif" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos</option>
+                  <option value="VERIFICADO">Verificado</option>
+                  <option value="PENDIENTE DE VERIFICACIÓN">Pendiente</option>
+                  <option value="REQUIERE REVISIÓN">Requiere Revisión</option>
+                  <option value="NO PUBLICAR">No Publicar (Oculto)</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Norma</label>
+                <select id="adminFilterNorm" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todas las normas</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold text-slate-500 dark:text-slate-400 block mb-1">Estado</label>
+                <select id="adminFilterStatus" onchange="EcoNorma.loadAdminParameters()" class="w-full py-1.5 px-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos</option>
+                  <option value="VIGENTE">Vigente</option>
+                  <option value="MODIFICADO">Modificado</option>
+                  <option value="DEROGADO">Derogado</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parameters Table -->
+          <div class="glass-panel rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+              <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-bold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th class="px-3 py-3">ID</th>
+                    <th class="px-3 py-3">Parámetro</th>
+                    <th class="px-3 py-3">Instrumento</th>
+                    <th class="px-3 py-3">Medio / Sector</th>
+                    <th class="px-3 py-3">Categoría / Subcategoría</th>
+                    <th class="px-3 py-3">Valor y Unidad</th>
+                    <th class="px-3 py-3">Norma Asociada</th>
+                    <th class="px-3 py-3">Verificación</th>
+                    <th class="px-3 py-3 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="adminParamsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr>
+                    <td colspan="9" class="text-center py-8 text-slate-400">Cargando catálogo completo de parámetros...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Admin Pagination -->
+            <div id="adminParamPagination" class="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500"></div>
+          </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 2: GESTIÓN DE NORMAS -->
+        <!-- ========================================== -->
+        <div id="adminSectionNormas" class="hidden space-y-4">
+          
+          <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="relative flex-grow w-full sm:w-auto">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input 
+                type="text" 
+                id="adminNormSearchInput"
+                oninput="EcoNorma.loadAdminNorms()"
+                placeholder="Buscar norma por código (ej. 004-2017), título o entidad..."
+                class="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
+              >
+            </div>
+            <button onclick="EcoNorma.openNewNormModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+              <i data-lucide="plus" class="w-4 h-4"></i> Nueva Norma Oficial
+            </button>
+          </div>
+
+          <!-- Norms Table -->
+          <div class="glass-panel rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+              <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-bold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th class="px-4 py-3">Código</th>
+                    <th class="px-4 py-3">Tipo / Número</th>
+                    <th class="px-4 py-3">Título de la Norma</th>
+                    <th class="px-4 py-3">Entidad / Año</th>
+                    <th class="px-4 py-3">Estado</th>
+                    <th class="px-4 py-3">URL Oficial</th>
+                    <th class="px-4 py-3">Parámetros</th>
+                    <th class="px-4 py-3 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="adminNormsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr>
+                    <td colspan="8" class="text-center py-8 text-slate-400">Cargando biblioteca de normas...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 3: PENDIENTES Y REVISIÓN -->
+        <!-- ========================================== -->
+        <div id="adminSectionPendientes" class="hidden space-y-4">
+          <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <i data-lucide="clock" class="w-5 h-5 text-amber-500"></i> Cola de Parámetros por Verificar / Revisar
+                </h3>
+                <p class="text-xs text-slate-500">Parámetros en estado pendiente, en revisión o marcados para no publicar.</p>
+              </div>
+              <button onclick="EcoNorma.loadAdminPendingVerification()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg hover:bg-slate-200">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1"></i> Actualizar
+              </button>
+            </div>
+            <div id="adminPendingContainer" class="space-y-2"></div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 4: HISTORIAL DE CAMBIOS -->
+        <!-- ========================================== -->
+        <div id="adminSectionHistorial" class="hidden space-y-4">
+          <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <i data-lucide="history" class="w-5 h-5 text-sky-600"></i> Historial y Trazabilidad de Auditoría
+                </h3>
+                <p class="text-xs text-slate-500">Registro cronológico de todas las modificaciones y verificaciones realizadas.</p>
+              </div>
+              <button onclick="EcoNorma.loadAdminAuditLogs()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-lg hover:bg-slate-200">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 inline mr-1"></i> Actualizar
+              </button>
+            </div>
+            
+            <div class="table-responsive border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+                <thead class="bg-slate-100 dark:bg-slate-800 text-[11px] uppercase font-bold text-slate-700 dark:text-slate-200">
+                  <tr>
+                    <th class="px-3 py-2.5">Fecha</th>
+                    <th class="px-3 py-2.5">Registro Modificado</th>
+                    <th class="px-3 py-2.5">Acción</th>
+                    <th class="px-3 py-2.5">Campo</th>
+                    <th class="px-3 py-2.5">Valor Anterior</th>
+                    <th class="px-3 py-2.5">Valor Nuevo</th>
+                    <th class="px-3 py-2.5">Motivo / Comentario</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAuditLogsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr><td colspan="7" class="text-center py-6 text-slate-400">Cargando historial de cambios...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 5: OBSERVACIONES DE USUARIOS -->
+        <!-- ========================================== -->
+        <div id="adminSectionMensajes" class="hidden space-y-4">
+          <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="inbox" class="w-5 h-5 text-brand-600"></i> Observaciones y Mensajes Recibidos
+            </h3>
+            <div id="adminInquiriesContainer" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- SUB-SECCIÓN 6: IMPORTAR CSV / JSON -->
+        <!-- ========================================== -->
+        <div id="adminSectionImportar" class="hidden space-y-4">
+          <div class="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 space-y-6 max-w-2xl">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="upload" class="w-5 h-5 text-brand-600"></i> Importación Masiva de Parámetros
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">Carga archivos en formato .CSV o .JSON con validación automática de duplicados y campos obligatorios.</p>
+            </div>
+
+            <form id="adminImportForm" class="space-y-4">
+              <div class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 text-center space-y-3">
+                <i data-lucide="file-spreadsheet" class="w-10 h-10 text-slate-400 mx-auto"></i>
+                <div>
+                  <input type="file" id="adminImportFileInput" accept=".csv,.json" required class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                </div>
+                <p class="text-[11px] text-slate-400">Campos obligatorios: instrument, environmental_medium, category, parameter_name, unit, norm_code.</p>
+              </div>
+
+              <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i> Procesar e Importar Archivo
+              </button>
+            </form>
+          </div>
         </div>
 
       </div>
@@ -794,7 +1071,356 @@
 
   </main>
 
-  <!-- Parameter Detail Modal (Ficha Técnica) -->
+  <!-- ============================================================= -->
+  <!-- MODALES ADMINISTRATIVOS Y DE FICHA TÉCNICA -->
+  <!-- ============================================================= -->
+
+  <!-- 1. Modal: Formulario Completo de Edición / Creación de Parámetro -->
+  <div id="adminParamModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-3xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl my-8 relative">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
+        <div>
+          <h3 id="adminParamModalTitle" class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="edit-3" class="w-5 h-5 text-brand-600"></i> Editar Parámetro Ambiental
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Modifica y ajusta los valores, unidades y fuentes normativas.</p>
+        </div>
+        <button onclick="EcoNorma.closeAdminParamModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="adminParamForm" class="space-y-6">
+        <input type="hidden" id="editParamId" value="">
+
+        <!-- Sección 1: Identificación -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="tag" class="w-3.5 h-3.5"></i> 1. Identificación del Parámetro
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Nombre Oficial del Parámetro *</label>
+              <input type="text" id="editParamName" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Nombres Alternativos / Sinónimos</label>
+              <input type="text" id="editParamAltNames" placeholder="Ej. Arsénico total, As (inorgánico)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Símbolo Químico / Abreviación</label>
+              <input type="text" id="editParamSymbol" placeholder="Ej. As, Pb, DBO5, PM2.5" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-white">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Número CAS (si aplica)</label>
+              <input type="text" id="editParamCas" placeholder="Ej. 7440-38-2" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-white">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Clasificación Regulatoria -->
+        <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5"></i> 2. Clasificación Regulatoria
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Instrumento *</label>
+              <select id="editParamInstrument" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+                <option value="ECA">ECA (Estándar de Calidad)</option>
+                <option value="LMP">LMP (Límite Máximo Permisible)</option>
+                <option value="VMA">VMA (Valor Máximo Admisible)</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Medio Ambiental *</label>
+              <input type="text" id="editParamMedium" required placeholder="Agua, Aire, Suelo, Ruido, Efluentes..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Sector (opcional)</label>
+              <input type="text" id="editParamSector" placeholder="Minería, Hidrocarburos, Saneamiento..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Categoría Normativa *</label>
+              <input type="text" id="editParamCategory" required placeholder="Ej. Categoría 1: Poblacional y Recreacional" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Subcategoría</label>
+              <input type="text" id="editParamSubcategory" placeholder="Ej. A1: Aguas que pueden ser potabilizadas..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 3: Valor Regulatorio y Unidad -->
+        <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-3.5 h-3.5"></i> 3. Valor Regulatorio y Unidad
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Tipo de Límite</label>
+              <select id="editParamLimitType" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <option value="Máximo">Máximo permitido (≤)</option>
+                <option value="Rango">Rango permitido [mín - máx]</option>
+                <option value="Mínimo">Mínimo requerido (≥)</option>
+                <option value="Referencial">Valor de Referencia</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Valor Mínimo</label>
+              <input type="number" step="any" id="editParamMinVal" placeholder="Ej. 6.5" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Valor Máximo / Límite</label>
+              <input type="number" step="any" id="editParamMaxVal" placeholder="Ej. 0.01" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono font-bold text-emerald-600">
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Texto Mostrar</label>
+              <input type="text" id="editParamValText" placeholder="Ej. 0.01 o Ausente" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+            </div>
+          </div>
+
+          <!-- Unidad de Medida con Chips Rápidos -->
+          <div class="space-y-1.5 text-xs">
+            <label class="font-bold text-slate-700 dark:text-slate-300 block">Unidad de Medida * (Personalizable)</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="editParamUnit" required placeholder="mg/L, µg/m³, dB(A), mg/kg MS, etc." class="flex-grow px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono font-bold">
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <span class="text-[10px] text-slate-400 font-semibold self-center">Insertar rápido:</span>
+              <button type="button" onclick="EcoNorma.setUnitQuick('mg/L')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">mg/L</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('µg/L')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">µg/L</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('mg/kg MS')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">mg/kg MS</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('µg/m³')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">µg/m³</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('mg/m³')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">mg/m³</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('dB(A)')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">dB(A)</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('NMP/100 mL')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">NMP/100 mL</button>
+              <button type="button" onclick="EcoNorma.setUnitQuick('Unidades de pH')" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 hover:bg-brand-50 rounded text-[11px] font-mono">Unidades pH</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 4: Fuente Normativa y Gestión de URLs -->
+        <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="scale" class="w-3.5 h-3.5"></i> 4. Fuente Normativa y Enlaces Oficiales
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="sm:col-span-2">
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Norma Legal Vinculada *</label>
+              <select id="editParamNormCode" required onchange="EcoNorma.onNormSelectionChange()" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+                <option value="">Cargando catálogo de normas...</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Anexo / Tabla / Numeral</label>
+              <input type="text" id="editParamAnnex" placeholder="Ej. Anexo I, Tabla 2" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+          </div>
+
+          <!-- URL Heredada de la Norma (Automática) -->
+          <div class="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-600 dark:text-slate-400">URL Oficial Heredada de la Norma:</span>
+              <button type="button" onclick="EcoNorma.testUrl(document.getElementById('editParamNormInheritedUrl').textContent)" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200 rounded-lg font-bold flex items-center gap-1">
+                <i data-lucide="external-link" class="w-3 h-3"></i> Probar Enlace de Norma
+              </button>
+            </div>
+            <p id="editParamNormInheritedUrl" class="font-mono text-slate-500 break-all text-[11px]"></p>
+          </div>
+
+          <!-- URL Específica del Parámetro (Override Opcional) -->
+          <div class="space-y-1.5 text-xs">
+            <label class="font-bold text-slate-700 dark:text-slate-300 block">
+              URL Específica del Parámetro (Opcional - Reemplaza la URL general para este registro)
+            </label>
+            <div class="flex items-center gap-2">
+              <input type="url" id="editParamSourceOverride" placeholder="https://busquedas.elperuano.pe/... o enlace a anexo específico" class="flex-grow px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+              <button type="button" onclick="EcoNorma.testUrl(document.getElementById('editParamSourceOverride').value)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl font-bold flex items-center gap-1 whitespace-nowrap">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Probar Enlace
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">Si dejas este campo en blanco, el parámetro utilizará automáticamente la URL oficial de la norma vinculada.</p>
+          </div>
+
+          <div class="text-xs">
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Observaciones / Criterios Técnicos</label>
+            <textarea id="editParamObservations" rows="2" placeholder="Notas sobre el método, condiciones de muestreo o excepciones..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
+          </div>
+        </div>
+
+        <!-- Sección 5: Verificación y Auditoría -->
+        <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <h4 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 5. Estado de Verificación y Auditoría
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Estado de Verificación *</label>
+              <select id="editParamVerifStatus" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+                <option value="VERIFICADO">✅ Verificado (Publicado)</option>
+                <option value="PENDIENTE DE VERIFICACIÓN">⚠ Pendiente de verificación</option>
+                <option value="REQUIERE REVISIÓN">🟡 Requiere revisión</option>
+                <option value="NO PUBLICAR">❌ No publicar (Oculto de la web pública)</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Estado Normativo *</label>
+              <select id="editParamStatus" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+                <option value="VIGENTE">VIGENTE</option>
+                <option value="MODIFICADO">MODIFICADO</option>
+                <option value="DEROGADO">DEROGADO</option>
+                <option value="INACTIVO">INACTIVO</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Comentario Administrativo (Motivo del cambio para el historial)</label>
+              <input type="text" id="editParamAdminComment" placeholder="Ej. Corrección de URL de anexo según última publicación oficial" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+          <button type="button" id="btnQuickVerifyParam" onclick="EcoNorma.verifyParamCurrentModal()" class="px-4 py-2.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-800">
+            <i data-lucide="check-circle" class="w-4 h-4"></i> Marcar como Verificado
+          </button>
+
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="EcoNorma.closeAdminParamModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" class="px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center gap-1.5">
+              <i data-lucide="save" class="w-4 h-4"></i> Guardar Cambios
+            </button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 2. Modal: Edición / Creación de Norma Oficial -->
+  <div id="adminNormModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl my-8 relative">
+      
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
+        <div>
+          <h3 id="adminNormModalTitle" class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <i data-lucide="file-text" class="w-5 h-5 text-brand-600"></i> Editar Norma Oficial
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Al actualizar la URL oficial de la norma, todos sus parámetros asociados la adoptarán automáticamente.</p>
+        </div>
+        <button onclick="EcoNorma.closeAdminNormModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="adminNormForm" class="space-y-4">
+        <input type="hidden" id="editNormIsNew" value="0">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Código de la Norma *</label>
+            <input type="text" id="editNormCode" required placeholder="Ej. D.S. 004-2017-MINAM" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono font-bold">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Tipo de Norma</label>
+            <select id="editNormType" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+              <option value="Decreto Supremo">Decreto Supremo (D.S.)</option>
+              <option value="Resolución Ministerial">Resolución Ministerial (R.M.)</option>
+              <option value="Resolución Directoral">Resolución Directoral (R.D.)</option>
+              <option value="Resolución de Consejo Directivo">Resolución de Consejo Directivo</option>
+              <option value="Decreto Legislativo">Decreto Legislativo</option>
+              <option value="Ley">Ley</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Número de Norma *</label>
+            <input type="text" id="editNormNumber" required placeholder="Ej. 004-2017" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Entidad Emisora *</label>
+            <input type="text" id="editNormEntity" required placeholder="MINAM, PRODUCE, MINEM..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold">
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Instrumento *</label>
+            <select id="editNormInstrument" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+              <option value="ECA">ECA</option>
+              <option value="LMP">LMP</option>
+              <option value="VMA">VMA</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Año *</label>
+            <input type="number" id="editNormYear" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+          </div>
+        </div>
+
+        <div class="text-xs">
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Título Completo de la Norma *</label>
+          <textarea id="editNormTitle" required rows="2" placeholder="Decreto Supremo que aprueba los Estándares de Calidad Ambiental..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium"></textarea>
+        </div>
+
+        <!-- URL Oficial de la Norma con Botón Probar -->
+        <div class="space-y-1.5 text-xs">
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">URL Oficial de la Norma * (Fuente primaria)</label>
+          <div class="flex items-center gap-2">
+            <input type="url" id="editNormOfficialUrl" required placeholder="https://www.gob.pe/institucion/minam/normas-legales/..." class="flex-grow px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+            <button type="button" onclick="EcoNorma.testUrl(document.getElementById('editNormOfficialUrl').value)" class="px-3 py-2 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 hover:bg-emerald-100 rounded-xl font-bold flex items-center gap-1 whitespace-nowrap border border-emerald-300 dark:border-emerald-800">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Probar Enlace
+            </button>
+          </div>
+        </div>
+
+        <!-- URL Alternativa -->
+        <div class="space-y-1.5 text-xs">
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">URL Alternativa / Respaldo (Opcional)</label>
+          <div class="flex items-center gap-2">
+            <input type="url" id="editNormAlternateUrl" placeholder="https://sinia.minam.gob.pe/... o enlace en El Peruano" class="flex-grow px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono">
+            <button type="button" onclick="EcoNorma.testUrl(document.getElementById('editNormAlternateUrl').value)" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl font-bold flex items-center gap-1 whitespace-nowrap">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Probar Enlace
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Estado de la Norma *</label>
+            <select id="editNormStatus" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold">
+              <option value="VIGENTE">VIGENTE</option>
+              <option value="MODIFICADO">MODIFICADO</option>
+              <option value="DEROGADO">DEROGADO</option>
+              <option value="INACTIVA">INACTIVA</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Comentario Administrativo</label>
+            <input type="text" id="editNormAdminComment" placeholder="Motivo de la actualización" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+          </div>
+        </div>
+
+        <div class="text-xs">
+          <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Resumen Normativo / Notas</label>
+          <textarea id="editNormSummary" rows="2" placeholder="Resumen descriptivo del alcance de la norma..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl"></textarea>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+          <button type="button" onclick="EcoNorma.closeAdminNormModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold shadow-md transition-colors flex items-center gap-1.5">
+            <i data-lucide="save" class="w-4 h-4"></i> Guardar Norma
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 3. Modal: Ficha Técnica Pública -->
   <div id="detailModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-2xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl my-8 relative">
       <div id="detailModalContent"></div>
