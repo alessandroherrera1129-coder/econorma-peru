@@ -1,6 +1,6 @@
 """
 Modelos de Datos Pydantic para EcoNorma Perú
-Define esquemas relacionales, validación de campos normativos y estructuras de respuesta.
+Define esquemas relacionales, validación de campos normativos, auditoría y estructuras de respuesta.
 """
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
@@ -8,6 +8,7 @@ from datetime import datetime
 
 class NormBase(BaseModel):
     code: str = Field(..., description="Código oficial (e.g. D.S. 004-2017-MINAM)")
+    norm_type: Optional[str] = Field("Decreto Supremo", description="Decreto Supremo, Resolución Ministerial, etc.")
     norm_number: str = Field(..., description="Número de norma (e.g. 004-2017)")
     title: str = Field(..., description="Título completo de la norma")
     issuing_entity: str = Field(..., description="Entidad emisora (MINAM, PRODUCE, etc.)")
@@ -17,12 +18,41 @@ class NormBase(BaseModel):
     year: int = Field(..., description="Año de publicación")
     publication_date: Optional[str] = Field(None, description="Fecha de publicación")
     effective_date: Optional[str] = Field(None, description="Fecha de entrada en vigencia")
-    status: str = Field("VIGENTE", description="VIGENTE / MODIFICADO / DEROGADO / PENDIENTE DE VERIFICACIÓN")
+    status: str = Field("VIGENTE", description="VIGENTE / MODIFICADO / DEROGADO / INACTIVA / PENDIENTE DE VERIFICACIÓN")
     modifying_norm: Optional[str] = None
     derogating_norm: Optional[str] = None
     official_url: str = Field(..., description="Enlace oficial en gob.pe, El Peruano, MINAM o SINIA")
+    alternate_url: Optional[str] = Field(None, description="Enlace alternativo de respaldo")
     summary: Optional[str] = Field(None, description="Resumen descriptivo de la norma")
     last_verified_date: Optional[str] = None
+    last_verified_at: Optional[str] = None
+
+class NormCreate(NormBase):
+    pass
+
+class NormUpdate(BaseModel):
+    norm_type: Optional[str] = None
+    norm_number: Optional[str] = None
+    title: Optional[str] = None
+    issuing_entity: Optional[str] = None
+    instrument: Optional[str] = None
+    environmental_medium: Optional[str] = None
+    sector: Optional[str] = None
+    year: Optional[int] = None
+    publication_date: Optional[str] = None
+    effective_date: Optional[str] = None
+    status: Optional[str] = None
+    modifying_norm: Optional[str] = None
+    derogating_norm: Optional[str] = None
+    official_url: Optional[str] = None
+    alternate_url: Optional[str] = None
+    summary: Optional[str] = None
+    last_verified_date: Optional[str] = None
+    last_verified_at: Optional[str] = None
+    admin_comment: Optional[str] = None
+
+class NormResponse(NormBase):
+    parameters_count: Optional[int] = 0
 
 class ParameterBase(BaseModel):
     instrument: str = Field(..., description="ECA / LMP / VMA")
@@ -36,12 +66,14 @@ class ParameterBase(BaseModel):
     alternative_names: Optional[str] = Field(None, description="Sinónimos o nombres alternativos")
     symbol: Optional[str] = Field(None, description="Símbolo químico o abreviación")
     cas_number: Optional[str] = Field(None, description="Número de registro CAS")
+    limit_type: Optional[str] = Field(None, description="Máximo, Rango, Mínimo, Referencial")
     min_value: Optional[float] = Field(None, description="Valor mínimo permitido")
     max_value: Optional[float] = Field(None, description="Valor máximo o límite normativo")
     value_text: Optional[str] = Field(None, description="Representación en texto del valor")
     unit: str = Field(..., description="Unidad de medida (mg/L, µg/m³, dBA, mg/kg MS, etc.)")
     evaluation_period: Optional[str] = Field(None, description="Periodo (24h, 1h, Anual, Diurno, etc.)")
     frequency: Optional[str] = None
+    special_condition: Optional[str] = Field(None, description="Condición especial de aplicación")
     method_criteria: Optional[str] = Field(None, description="Método de análisis o criterio")
     observations: Optional[str] = Field(None, description="Notas técnicas, excepciones o condiciones")
     norm_code: str = Field(..., description="Código de la norma vinculada")
@@ -52,14 +84,17 @@ class ParameterBase(BaseModel):
     article_ref: Optional[str] = None
     page_ref: Optional[str] = None
     issuing_entity: str = Field(..., description="Entidad emisora")
-    official_url: str = Field(..., description="URL oficial de la norma")
+    official_url: Optional[str] = Field(None, description="URL resuelta (heredada o override)")
+    source_url_override: Optional[str] = Field(None, description="URL específica del parámetro para direccionar a un anexo/tabla/página particular")
     publication_date: Optional[str] = None
     effective_date: Optional[str] = None
-    status: str = Field("VIGENTE", description="VIGENTE / MODIFICADO / DEROGADO / PENDIENTE DE VERIFICACIÓN")
+    status: str = Field("VIGENTE", description="VIGENTE / MODIFICADO / DEROGADO / INACTIVO")
     modifying_norm: Optional[str] = None
     derogating_norm: Optional[str] = None
     last_verified_date: Optional[str] = None
-    verification_status: str = Field("VERIFICADO", description="VERIFICADO / PENDIENTE DE VERIFICACIÓN")
+    last_verified_at: Optional[str] = None
+    verification_status: str = Field("VERIFICADO", description="VERIFICADO / PENDIENTE DE VERIFICACIÓN / REQUIERE REVISIÓN / NO PUBLICAR")
+    admin_comment: Optional[str] = Field(None, description="Comentario administrativo de revisión")
 
 class ParameterCreate(ParameterBase):
     pass
@@ -68,24 +103,44 @@ class ParameterUpdate(BaseModel):
     instrument: Optional[str] = None
     environmental_medium: Optional[str] = None
     sector: Optional[str] = None
+    subsector: Optional[str] = None
+    activity: Optional[str] = None
     category: Optional[str] = None
     subcategory: Optional[str] = None
     parameter_name: Optional[str] = None
     alternative_names: Optional[str] = None
     symbol: Optional[str] = None
     cas_number: Optional[str] = None
+    limit_type: Optional[str] = None
     min_value: Optional[float] = None
     max_value: Optional[float] = None
     value_text: Optional[str] = None
     unit: Optional[str] = None
     evaluation_period: Optional[str] = None
+    frequency: Optional[str] = None
+    special_condition: Optional[str] = None
+    method_criteria: Optional[str] = None
     observations: Optional[str] = None
     norm_code: Optional[str] = None
+    norm_name: Optional[str] = None
+    year: Optional[int] = None
+    annex: Optional[str] = None
+    table_ref: Optional[str] = None
+    article_ref: Optional[str] = None
+    page_ref: Optional[str] = None
+    issuing_entity: Optional[str] = None
+    official_url: Optional[str] = None
+    source_url_override: Optional[str] = None
     status: Optional[str] = None
     verification_status: Optional[str] = None
+    last_verified_date: Optional[str] = None
+    last_verified_at: Optional[str] = None
+    admin_comment: Optional[str] = None
 
 class ParameterResponse(ParameterBase):
     id: int
+    norm_official_url: Optional[str] = None
+    norm_alternate_url: Optional[str] = None
 
 class SearchQuery(BaseModel):
     query: Optional[str] = None
@@ -95,6 +150,7 @@ class SearchQuery(BaseModel):
     category: Optional[str] = None
     subcategory: Optional[str] = None
     status: Optional[str] = None
+    verification_status: Optional[str] = None
     norm_code: Optional[str] = None
     entity: Optional[str] = None
     year: Optional[int] = None
@@ -128,6 +184,19 @@ class ContactSubmission(BaseModel):
     inquiry_type: str  # Corrección de información / Norma nueva / Actualización normativa / Recomendación de mejora / Consulta general
     subject: str
     message: str
+
+class AuditLogEntry(BaseModel):
+    id: int
+    target_type: str
+    target_id: str
+    target_name: Optional[str]
+    action: str
+    field_name: Optional[str]
+    old_value: Optional[str]
+    new_value: Optional[str]
+    admin_user: str
+    comment: Optional[str]
+    created_at: str
 
 class SystemStats(BaseModel):
     total_parameters: int
