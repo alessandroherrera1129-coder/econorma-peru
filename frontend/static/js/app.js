@@ -1641,11 +1641,12 @@ const EcoNorma = (function() {
         loadAdminParameters();
         fetchSystemStats();
       } else {
-        const err = await res.json();
-        showToast(`Error al guardar: ${err.detail || 'Verifica los campos'}`, 'error');
+        const errMsg = await parseErrorResponse(res);
+        showToast(`Error al guardar: ${errMsg}`, 'error');
       }
     } catch (e) {
-      showToast('Error de conexión con el servidor', 'error');
+      console.error('Error guardando parámetro:', e);
+      showToast('Error de comunicación con el servidor. Revisa tu conexión.', 'error');
     }
   }
 
@@ -1677,10 +1678,12 @@ const EcoNorma = (function() {
         loadAdminPendingVerification();
         fetchSystemStats();
       } else {
-        showToast('Error al verificar el parámetro', 'error');
+        const errMsg = await parseErrorResponse(res);
+        showToast(`Error al verificar: ${errMsg}`, 'error');
       }
     } catch (e) {
-      showToast('Error de conexión', 'error');
+      console.error('Error verificando parámetro:', e);
+      showToast('Error de comunicación con el servidor', 'error');
     }
   }
 
@@ -1698,10 +1701,12 @@ const EcoNorma = (function() {
         loadAdminParameters();
         fetchSystemStats();
       } else {
-        showToast('No se pudo desactivar el parámetro', 'error');
+        const errMsg = await parseErrorResponse(res);
+        showToast(`No se pudo desactivar: ${errMsg}`, 'error');
       }
     } catch (e) {
-      showToast('Error de conexión', 'error');
+      console.error('Error desactivando parámetro:', e);
+      showToast('Error de comunicación con el servidor', 'error');
     }
   }
 
@@ -1890,11 +1895,12 @@ const EcoNorma = (function() {
         await preloadAdminNormsCatalog();
         loadAdminNorms();
       } else {
-        const err = await res.json();
-        showToast(`Error al guardar norma: ${err.detail || 'Verifica los campos'}`, 'error');
+        const errMsg = await parseErrorResponse(res);
+        showToast(`Error al guardar norma: ${errMsg}`, 'error');
       }
     } catch (e) {
-      showToast('Error de conexión con el servidor', 'error');
+      console.error('Error guardando norma:', e);
+      showToast('Error de comunicación con el servidor. Revisa tu conexión.', 'error');
     }
   }
 
@@ -2139,6 +2145,20 @@ const EcoNorma = (function() {
 
     syncFiltersToUI();
     executeSearch();
+  }
+
+  async function parseErrorResponse(res) {
+    try {
+      const data = await res.json();
+      return data.detail || data.message || `Error del servidor (${res.status})`;
+    } catch {
+      try {
+        const text = await res.text();
+        return text || `Error HTTP ${res.status}`;
+      } catch {
+        return `Error HTTP ${res.status}`;
+      }
+    }
   }
 
   function showToast(message, type = 'info') {
