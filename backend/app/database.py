@@ -168,6 +168,9 @@ def init_db():
     add_column_if_missing("audit_logs", "new_value", "TEXT")
     add_column_if_missing("audit_logs", "admin_user", "TEXT")
     add_column_if_missing("audit_logs", "comment", "TEXT")
+    add_column_if_missing("audit_logs", "created_at", "TIMESTAMP")
+    add_column_if_missing("audit_logs", "timestamp", "TIMESTAMP")
+    add_column_if_missing("audit_logs", "details", "TEXT")
 
     # Índices para rendimiento
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_name ON parameters(parameter_name);")
@@ -223,22 +226,42 @@ def log_audit(
     admin_user: str = "Administrador",
     comment: Optional[str] = None
 ):
-    """Registra una entrada en el historial de modificaciones del sistema."""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-    INSERT INTO audit_logs (
-        target_type, target_id, target_name, action, field_name,
-        old_value, new_value, admin_user, comment, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'));
-    """, (
-        target_type, str(target_id), str(target_name), action, field_name,
-        str(old_value) if old_value is not None else None,
-        str(new_value) if new_value is not None else None,
-        admin_user, comment
-    ))
-    conn.commit()
-    conn.close()
+    """Registra una entrada en el historial de modificaciones del sistema con tolerancia a cualquier esquema."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(audit_logs);")
+        existing_cols = {r["name"] for r in cursor.fetchall()}
+        
+        now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        data = {
+            "target_type": target_type,
+            "target_id": str(target_id),
+            "target_name": str(target_name),
+            "action": action,
+            "field_name": field_name,
+            "old_value": str(old_value) if old_value is not None else None,
+            "new_value": str(new_value) if new_value is not None else None,
+            "admin_user": admin_user,
+            "comment": comment
+        }
+        if "created_at" in existing_cols:
+            data["created_at"] = now_ts
+        if "timestamp" in existing_cols:
+            data["timestamp"] = now_ts
+        if "details" in existing_cols:
+            data["details"] = f"{action} en {field_name or target_name}: {old_value or ''} -> {new_value or ''} ({comment or ''})".strip()
+            
+        valid_cols = [k for k in data.keys() if k in existing_cols]
+        if valid_cols:
+            placeholders = ", ".join(["?"] * len(valid_cols))
+            col_names = ", ".join(valid_cols)
+            values = [data[k] for k in valid_cols]
+            cursor.execute(f"INSERT INTO audit_logs ({col_names}) VALUES ({placeholders});", values)
+            conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[WARN] Error registrando audit log: {e}")
 
 def load_seed_norms(conn: sqlite3.Connection):
     data_dir = Path(__file__).resolve().parent / "data"
@@ -941,6 +964,11 @@ def get_audit_logs(target_type: Optional[str] = None, target_id: Optional[str] =
     sql = f"SELECT * FROM audit_logs{where_clause} ORDER BY id DESC LIMIT ?;"
     cursor.execute(sql, params + [limit])
     rows = [dict(r) for r in cursor.fetchall()]
+    
+    for r in rows:
+        if not r.get("created_at"):
+            r["created_at"] = r.get("timestamp") or ""
+            
     conn.close()
     return rows
 
