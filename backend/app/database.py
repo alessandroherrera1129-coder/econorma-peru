@@ -184,16 +184,9 @@ def init_db():
 
     conn.commit()
 
-    # Cargar Seeds si la base está vacía
-    cursor.execute("SELECT COUNT(*) as count FROM norms;")
-    norms_count = cursor.fetchone()["count"]
-    if norms_count == 0:
-        load_seed_norms(conn)
-
-    cursor.execute("SELECT COUNT(*) as count FROM parameters;")
-    params_count = cursor.fetchone()["count"]
-    if params_count == 0:
-        load_seed_parameters(conn)
+    # Sincronizar base de datos con los archivos maestros Seeds
+    load_seed_norms(conn)
+    load_seed_parameters(conn)
 
     conn.close()
 
@@ -295,6 +288,7 @@ def load_seed_parameters(conn: sqlite3.Connection):
     with open(params_file, "r", encoding="utf-8") as f:
         params = json.load(f)
     cursor = conn.cursor()
+    cursor.execute("DELETE FROM parameters;")
     for p in params:
         search_tokens = compute_search_tokens(p)
         cursor.execute("""
@@ -322,8 +316,8 @@ def load_seed_parameters(conn: sqlite3.Connection):
             p["category"], p.get("subcategory"), p["parameter_name"], p.get("alternative_names"), p.get("symbol"),
             p.get("cas_number"), p.get("limit_type", "Máximo"), p.get("min_value"), p.get("max_value"), p.get("value_text"), p["unit"],
             p.get("evaluation_period"), p.get("frequency"), p.get("special_condition"), p.get("method_criteria"), p.get("observations"),
-            p["norm_code"], p["norm_name"], p["year"], p.get("annex"), p.get("table_ref"), p.get("article_ref"), p.get("page_ref"),
-            p["issuing_entity"], p.get("official_url"), p.get("source_url_override"), p.get("publication_date"), p.get("effective_date"),
+            p["norm_code"], p.get("norm_name", p["norm_code"]), p.get("year", 2017), p.get("annex"), p.get("table_ref"), p.get("article_ref"), p.get("page_ref"),
+            p.get("issuing_entity", "MINAM"), p.get("official_url"), p.get("source_url_override"), p.get("publication_date"), p.get("effective_date"),
             p.get("status", "VIGENTE"), p.get("modifying_norm"), p.get("derogating_norm"), p.get("last_verified_date"),
             p.get("verification_status", "VERIFICADO"), p.get("admin_comment"), search_tokens
         ))
