@@ -359,3 +359,87 @@ def export_backup(x_admin_token: Optional[str] = Header(None)):
         "audit_logs": audit
     }
     return backup_data
+
+@router.get("/export/seed-parameters")
+def export_seed_parameters(x_admin_token: Optional[str] = Header(None)):
+    verify_token(x_admin_token)
+    params = get_all_raw_parameters()
+    clean_params = []
+    for p in params:
+        clean_p = {
+            "instrument": p.get("instrument"),
+            "environmental_medium": p.get("environmental_medium"),
+            "sector": p.get("sector"),
+            "subsector": p.get("subsector"),
+            "activity": p.get("activity"),
+            "category": p.get("category"),
+            "subcategory": p.get("subcategory"),
+            "parameter_name": p.get("parameter_name"),
+            "alternative_names": p.get("alternative_names"),
+            "symbol": p.get("symbol"),
+            "cas_number": p.get("cas_number"),
+            "limit_type": p.get("limit_type"),
+            "min_value": p.get("min_value"),
+            "max_value": p.get("max_value"),
+            "value_text": p.get("value_text"),
+            "unit": p.get("unit"),
+            "evaluation_period": p.get("evaluation_period"),
+            "frequency": p.get("frequency"),
+            "special_condition": p.get("special_condition"),
+            "method_criteria": p.get("method_criteria"),
+            "observations": p.get("observations"),
+            "norm_code": p.get("norm_code"),
+            "norm_name": p.get("norm_name"),
+            "year": p.get("year"),
+            "annex": p.get("annex"),
+            "table_ref": p.get("table_ref"),
+            "article_ref": p.get("article_ref"),
+            "page_ref": p.get("page_ref"),
+            "issuing_entity": p.get("issuing_entity"),
+            "official_url": p.get("official_url"),
+            "source_url_override": p.get("source_url_override"),
+            "publication_date": p.get("publication_date"),
+            "effective_date": p.get("effective_date"),
+            "status": p.get("status"),
+            "modifying_norm": p.get("modifying_norm"),
+            "derogating_norm": p.get("derogating_norm"),
+            "last_verified_date": p.get("last_verified_date"),
+            "verification_status": p.get("verification_status"),
+            "admin_comment": p.get("admin_comment")
+        }
+        clean_params.append(clean_p)
+    return clean_params
+
+@router.get("/export/seed-norms")
+def export_seed_norms(x_admin_token: Optional[str] = Header(None)):
+    verify_token(x_admin_token)
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM norms ORDER BY year DESC, code ASC;")
+    norms = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    
+    clean_norms = []
+    for n in norms:
+        clean_n = {
+            "code": n.get("code"),
+            "norm_type": n.get("norm_type", "Decreto Supremo"),
+            "norm_number": n.get("norm_number"),
+            "title": n.get("title"),
+            "issuing_entity": n.get("issuing_entity"),
+            "instrument": n.get("instrument"),
+            "environmental_medium": n.get("environmental_medium"),
+            "sector": n.get("sector"),
+            "year": n.get("year"),
+            "publication_date": n.get("publication_date"),
+            "effective_date": n.get("effective_date"),
+            "status": n.get("status"),
+            "modifying_norm": n.get("modifying_norm"),
+            "derogating_norm": n.get("derogating_norm"),
+            "official_url": n.get("official_url"),
+            "alternate_url": n.get("alternate_url"),
+            "summary": n.get("summary"),
+            "last_verified_date": n.get("last_verified_date")
+        }
+        clean_norms.append(clean_n)
+    return clean_norms
