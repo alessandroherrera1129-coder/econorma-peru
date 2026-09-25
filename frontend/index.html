@@ -1038,9 +1038,45 @@
         </div>
 
         <!-- ========================================== -->
-        <!-- SUB-SECCIÓN 6: IMPORTAR CSV / JSON -->
+        <!-- SUB-SECCIÓN 6: IMPORTAR / EXPORTAR DATOS -->
         <!-- ========================================== -->
-        <div id="adminSectionImportar" class="hidden space-y-4">
+        <div id="adminSectionImportar" class="hidden space-y-6">
+          
+          <!-- Bloque de Exportación y Sincronización Permanente con GitHub -->
+          <div class="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 space-y-4 max-w-2xl">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <i data-lucide="download-cloud" class="w-5 h-5 text-emerald-600"></i> Guardar Progreso Permanente (Seeds para GitHub)
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">Descarga tus modificaciones en los archivos JSON oficiales para subirlos a GitHub y que queden guardados para siempre en Render.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <button onclick="EcoNorma.downloadSeedParameters()" class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all text-left flex flex-col justify-between space-y-2 group shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Parámetros Oficiales</span>
+                  <i data-lucide="download" class="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                </div>
+                <span class="text-[11px] font-mono text-emerald-700 dark:text-emerald-400">seed_parameters.json</span>
+              </button>
+
+              <button onclick="EcoNorma.downloadSeedNorms()" class="p-4 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 rounded-2xl hover:bg-sky-100 dark:hover:bg-sky-900/40 transition-all text-left flex flex-col justify-between space-y-2 group shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-sky-900 dark:text-sky-200">Normas y URLs</span>
+                  <i data-lucide="download" class="w-4 h-4 text-sky-600 group-hover:scale-110 transition-transform"></i>
+                </div>
+                <span class="text-[11px] font-mono text-sky-700 dark:text-sky-400">seed_norms.json</span>
+              </button>
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button onclick="EcoNorma.downloadBackup()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="archive" class="w-4 h-4"></i> Descargar Backup Completo (Incluye Auditoría)
+              </button>
+            </div>
+          </div>
+
+          <!-- Bloque de Importación Masiva -->
           <div class="glass-card rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 space-y-6 max-w-2xl">
             <div>
               <h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
