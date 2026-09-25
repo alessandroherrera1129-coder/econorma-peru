@@ -2094,6 +2094,52 @@ const EcoNorma = (function() {
     }
   }
 
+  async function downloadSeedParameters() {
+    try {
+      const res = await fetch('/api/admin/export/seed-parameters', {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'seed_parameters.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Descargado seed_parameters.json listo para subir a GitHub', 'success');
+      } else {
+        showToast('Error al exportar parámetros', 'error');
+      }
+    } catch (e) {
+      showToast('Error de comunicación con el servidor', 'error');
+    }
+  }
+
+  async function downloadSeedNorms() {
+    try {
+      const res = await fetch('/api/admin/export/seed-norms', {
+        headers: { 'x-admin-token': state.adminToken }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'seed_norms.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Descargado seed_norms.json listo para subir a GitHub', 'success');
+      } else {
+        showToast('Error al exportar normas', 'error');
+      }
+    } catch (e) {
+      showToast('Error de comunicación con el servidor', 'error');
+    }
+  }
+
   // --- UTILIDADES PÚBLICAS Y EVENTOS ---
 
   function exportFilteredCsv() {
@@ -2322,6 +2368,8 @@ const EcoNorma = (function() {
     loginAdmin,
     logoutAdmin,
     downloadBackup,
+    downloadSeedParameters,
+    downloadSeedNorms,
     loadInterCategoryComparison,
     evaluateCompliance,
     switchAdminSubTab,
