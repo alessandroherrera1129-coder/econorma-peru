@@ -41,7 +41,7 @@
   },
   {
     "code": "D.S. 003-2017-MINAM",
-    "norm_type": null,
+    "norm_type": "Decreto Supremo",
     "norm_number": "003-2017",
     "title": "Aprueban Estándares de Calidad Ambiental (ECA) para Aire y establecen Disposiciones Complementarias",
     "issuing_entity": "MINAM",
@@ -54,10 +54,10 @@
     "status": "VIGENTE",
     "modifying_norm": null,
     "derogating_norm": null,
-    "official_url": "https://www.gob.pe/institucion/minam/normas-legales/193707-003-2017-minam",
+    "official_url": "https://www.gob.pe/institucion/minam/normas-legales/3670-003-2017-minam",
     "alternate_url": null,
     "summary": "Establece los niveles de concentración de contaminantes en el aire en su condición de cuerpo receptor (SO2, NO2, PM2.5, PM10, CO, O3, Pb, H2S, Benceno, Hidrocarburos totales, Hg gaseoso). Derogó el D.S. N° 074-2001-PCM, D.S. N° 069-2003-PCM y D.S. N° 003-2008-MINAM.",
-    "last_verified_date": "2026-08-28"
+    "last_verified_date": "2026-09-29"
   },
   {
     "code": "D.S. 004-2017-MINAM",
