@@ -77,13 +77,13 @@ class ParameterBase(BaseModel):
     method_criteria: Optional[str] = Field(None, description="Método de análisis o criterio")
     observations: Optional[str] = Field(None, description="Notas técnicas, excepciones o condiciones")
     norm_code: str = Field(..., description="Código de la norma vinculada")
-    norm_name: str = Field(..., description="Nombre de la norma")
-    year: int = Field(..., description="Año de la norma")
+    norm_name: Optional[str] = Field(None, description="Nombre de la norma")
+    year: Optional[int] = Field(None, description="Año de la norma")
     annex: Optional[str] = Field(None, description="Anexo correspondiente")
     table_ref: Optional[str] = Field(None, description="Tabla o numeral")
     article_ref: Optional[str] = None
     page_ref: Optional[str] = None
-    issuing_entity: str = Field(..., description="Entidad emisora")
+    issuing_entity: Optional[str] = Field(None, description="Entidad emisora")
     official_url: Optional[str] = Field(None, description="URL resuelta (heredada o override)")
     source_url_override: Optional[str] = Field(None, description="URL específica del parámetro para direccionar a un anexo/tabla/página particular")
     publication_date: Optional[str] = None
