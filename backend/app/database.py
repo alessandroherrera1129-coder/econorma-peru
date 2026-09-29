@@ -698,36 +698,71 @@ def create_parameter(param_data: dict, admin_user: str = "Administrador") -> int
     search_tokens = compute_search_tokens(param_data)
     now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    cursor.execute("""
-    INSERT INTO parameters (
-        instrument, environmental_medium, sector, subsector, activity,
-        category, subcategory, parameter_name, alternative_names, symbol,
-        cas_number, limit_type, min_value, max_value, value_text, unit,
-        evaluation_period, frequency, special_condition, method_criteria, observations,
-        norm_code, norm_name, year, annex, table_ref, article_ref, page_ref,
-        issuing_entity, official_url, source_url_override, publication_date, effective_date,
-        status, modifying_norm, derogating_norm, last_verified_date, last_verified_at,
-        verification_status, admin_comment, search_tokens, created_at, updated_at
-    ) VALUES (
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?
-    );
-    """, (
-        param_data["instrument"], param_data["environmental_medium"], param_data.get("sector"), param_data.get("subsector"), param_data.get("activity"),
-        param_data["category"], param_data.get("subcategory"), param_data["parameter_name"], param_data.get("alternative_names"), param_data.get("symbol"),
-        param_data.get("cas_number"), param_data.get("limit_type", "Máximo"), param_data.get("min_value"), param_data.get("max_value"), param_data.get("value_text"), param_data["unit"],
-        param_data.get("evaluation_period"), param_data.get("frequency"), param_data.get("special_condition"), param_data.get("method_criteria"), param_data.get("observations"),
-        param_data["norm_code"], param_data.get("norm_name", param_data["norm_code"]), param_data.get("year", datetime.now().year), param_data.get("annex"), param_data.get("table_ref"), param_data.get("article_ref"), param_data.get("page_ref"),
-        param_data.get("issuing_entity", "MINAM"), param_data.get("official_url"), param_data.get("source_url_override"), param_data.get("publication_date"), param_data.get("effective_date"),
-        param_data.get("status", "VIGENTE"), param_data.get("modifying_norm"), param_data.get("derogating_norm"), param_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")), now_ts,
-        param_data.get("verification_status", "VERIFICADO"), param_data.get("admin_comment"), search_tokens, now_ts, now_ts
-    ))
+    cursor.execute("PRAGMA table_info(parameters);")
+    existing_cols = {r["name"] for r in cursor.fetchall()}
+
+    # Resolver metadatos de la norma si no vienen en la solicitud
+    norm_code = param_data.get("norm_code", "")
+    cursor.execute("SELECT title, issuing_entity, year, official_url FROM norms WHERE code = ? OR norm_number = ?;", (norm_code, norm_code))
+    norm_row = cursor.fetchone()
+
+    resolved_norm_name = param_data.get("norm_name") or (norm_row["title"] if norm_row else None) or norm_code or "Norma Oficial"
+    resolved_entity = param_data.get("issuing_entity") or (norm_row["issuing_entity"] if norm_row else None) or "MINAM"
+    resolved_year = param_data.get("year") or (norm_row["year"] if norm_row else None) or datetime.now().year
+    resolved_url = param_data.get("official_url") or (norm_row["official_url"] if norm_row else None)
+
+    data = {
+        "instrument": param_data["instrument"],
+        "environmental_medium": param_data["environmental_medium"],
+        "sector": param_data.get("sector"),
+        "subsector": param_data.get("subsector"),
+        "activity": param_data.get("activity"),
+        "category": param_data["category"],
+        "subcategory": param_data.get("subcategory"),
+        "parameter_name": param_data["parameter_name"],
+        "alternative_names": param_data.get("alternative_names"),
+        "symbol": param_data.get("symbol"),
+        "cas_number": param_data.get("cas_number"),
+        "limit_type": param_data.get("limit_type", "Máximo"),
+        "min_value": param_data.get("min_value"),
+        "max_value": param_data.get("max_value"),
+        "value_text": param_data.get("value_text"),
+        "unit": param_data["unit"],
+        "evaluation_period": param_data.get("evaluation_period"),
+        "frequency": param_data.get("frequency"),
+        "special_condition": param_data.get("special_condition"),
+        "method_criteria": param_data.get("method_criteria"),
+        "observations": param_data.get("observations"),
+        "norm_code": norm_code,
+        "norm_name": resolved_norm_name,
+        "year": resolved_year,
+        "annex": param_data.get("annex"),
+        "table_ref": param_data.get("table_ref"),
+        "article_ref": param_data.get("article_ref"),
+        "page_ref": param_data.get("page_ref"),
+        "issuing_entity": resolved_entity,
+        "official_url": resolved_url,
+        "source_url_override": param_data.get("source_url_override"),
+        "publication_date": param_data.get("publication_date"),
+        "effective_date": param_data.get("effective_date"),
+        "status": param_data.get("status", "VIGENTE"),
+        "modifying_norm": param_data.get("modifying_norm"),
+        "derogating_norm": param_data.get("derogating_norm"),
+        "last_verified_date": param_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")),
+        "last_verified_at": now_ts,
+        "verification_status": param_data.get("verification_status", "VERIFICADO"),
+        "admin_comment": param_data.get("admin_comment"),
+        "search_tokens": search_tokens,
+        "created_at": now_ts,
+        "updated_at": now_ts
+    }
+
+    valid_cols = [k for k in data.keys() if k in existing_cols]
+    placeholders = ", ".join(["?"] * len(valid_cols))
+    col_names = ", ".join(valid_cols)
+    values = [data[k] for k in valid_cols]
+
+    cursor.execute(f"INSERT INTO parameters ({col_names}) VALUES ({placeholders});", values)
     conn.commit()
     pid = cursor.lastrowid
     conn.close()
@@ -752,6 +787,9 @@ def update_parameter(param_id: int, updates: dict, admin_user: str = "Administra
         return False
     current_dict = dict(current)
 
+    cursor.execute("PRAGMA table_info(parameters);")
+    existing_cols = {r["name"] for r in cursor.fetchall()}
+
     changes = []
     for k, new_v in updates.items():
         if k in ("id", "search_tokens", "created_at", "updated_at"):
@@ -762,15 +800,22 @@ def update_parameter(param_id: int, updates: dict, admin_user: str = "Administra
 
     current_dict.update(updates)
     current_dict["search_tokens"] = compute_search_tokens(current_dict)
-    current_dict["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if "updated_at" in existing_cols:
+        current_dict["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if "verification_status" in updates and updates["verification_status"] == "VERIFICADO":
-        current_dict["last_verified_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        current_dict["last_verified_date"] = datetime.now().strftime("%Y-%m-%d")
+        if "last_verified_at" in existing_cols:
+            current_dict["last_verified_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if "last_verified_date" in existing_cols:
+            current_dict["last_verified_date"] = datetime.now().strftime("%Y-%m-%d")
 
-    fields = [k for k in updates.keys() if k not in ("id", "search_tokens", "created_at")] + ["search_tokens", "updated_at"]
-    if "last_verified_at" in current_dict and "last_verified_at" not in fields:
+    fields = [k for k in updates.keys() if k in existing_cols and k not in ("id", "search_tokens", "created_at")]
+    if "search_tokens" in existing_cols and "search_tokens" not in fields:
+        fields.append("search_tokens")
+    if "updated_at" in existing_cols and "updated_at" not in fields:
+        fields.append("updated_at")
+    if "last_verified_at" in current_dict and "last_verified_at" in existing_cols and "last_verified_at" not in fields:
         fields.append("last_verified_at")
-    if "last_verified_date" in current_dict and "last_verified_date" not in fields:
+    if "last_verified_date" in current_dict and "last_verified_date" in existing_cols and "last_verified_date" not in fields:
         fields.append("last_verified_date")
 
     set_clauses = [f"{k} = ?" for k in fields]
@@ -822,13 +867,15 @@ def delete_parameter(param_id: int, soft: bool = True, admin_user: str = "Admini
 
     if soft:
         cursor.execute("UPDATE parameters SET status = 'INACTIVO', verification_status = 'NO PUBLICAR' WHERE id = ?;", (param_id,))
+        conn.commit()
+        conn.close()
         log_audit("PARAMETER", str(param_id), param_name, "STATUS_CHANGE", field_name="status", old_value="VIGENTE", new_value="INACTIVO", admin_user=admin_user, comment="Desactivado (Soft delete)")
     else:
         cursor.execute("DELETE FROM parameters WHERE id = ?;", (param_id,))
+        conn.commit()
+        conn.close()
         log_audit("PARAMETER", str(param_id), param_name, "DELETE", admin_user=admin_user, comment="Eliminado permanentemente")
     
-    conn.commit()
-    conn.close()
     return True
 
 # --- Operaciones Administrativas: Normas ---
@@ -853,24 +900,39 @@ def create_norm(norm_data: dict, admin_user: str = "Administrador") -> str:
     cursor = conn.cursor()
     now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    cursor.execute("""
-    INSERT INTO norms (
-        code, norm_type, norm_number, title, issuing_entity, instrument,
-        environmental_medium, sector, year, publication_date, effective_date,
-        status, modifying_norm, derogating_norm, official_url, alternate_url,
-        summary, last_verified_date, last_verified_at, created_at, updated_at
-    ) VALUES (
-        ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?
-    );
-    """, (
-        norm_data["code"], norm_data.get("norm_type", "Decreto Supremo"), norm_data["norm_number"], norm_data["title"], norm_data["issuing_entity"], norm_data["instrument"],
-        norm_data.get("environmental_medium"), norm_data.get("sector"), norm_data["year"], norm_data.get("publication_date"), norm_data.get("effective_date"),
-        norm_data.get("status", "VIGENTE"), norm_data.get("modifying_norm"), norm_data.get("derogating_norm"), norm_data["official_url"], norm_data.get("alternate_url"),
-        norm_data.get("summary"), norm_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")), now_ts, now_ts, now_ts
-    ))
+    cursor.execute("PRAGMA table_info(norms);")
+    existing_cols = {r["name"] for r in cursor.fetchall()}
+
+    data = {
+        "code": norm_data["code"],
+        "norm_type": norm_data.get("norm_type", "Decreto Supremo"),
+        "norm_number": norm_data["norm_number"],
+        "title": norm_data["title"],
+        "issuing_entity": norm_data["issuing_entity"],
+        "instrument": norm_data["instrument"],
+        "environmental_medium": norm_data.get("environmental_medium"),
+        "sector": norm_data.get("sector"),
+        "year": norm_data["year"],
+        "publication_date": norm_data.get("publication_date"),
+        "effective_date": norm_data.get("effective_date"),
+        "status": norm_data.get("status", "VIGENTE"),
+        "modifying_norm": norm_data.get("modifying_norm"),
+        "derogating_norm": norm_data.get("derogating_norm"),
+        "official_url": norm_data["official_url"],
+        "alternate_url": norm_data.get("alternate_url"),
+        "summary": norm_data.get("summary"),
+        "last_verified_date": norm_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")),
+        "last_verified_at": now_ts,
+        "created_at": now_ts,
+        "updated_at": now_ts
+    }
+
+    valid_cols = [k for k in data.keys() if k in existing_cols]
+    placeholders = ", ".join(["?"] * len(valid_cols))
+    col_names = ", ".join(valid_cols)
+    values = [data[k] for k in valid_cols]
+
+    cursor.execute(f"INSERT INTO norms ({col_names}) VALUES ({placeholders});", values)
     conn.commit()
     conn.close()
 
@@ -894,6 +956,9 @@ def update_norm(code: str, updates: dict, admin_user: str = "Administrador", com
         return False
     current_dict = dict(current)
 
+    cursor.execute("PRAGMA table_info(norms);")
+    existing_cols = {r["name"] for r in cursor.fetchall()}
+
     changes = []
     for k, new_v in updates.items():
         if k in ("code", "created_at", "updated_at"):
@@ -903,11 +968,21 @@ def update_norm(code: str, updates: dict, admin_user: str = "Administrador", com
             changes.append((k, old_v, new_v))
 
     current_dict.update(updates)
-    current_dict["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    current_dict["last_verified_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    current_dict["last_verified_date"] = datetime.now().strftime("%Y-%m-%d")
+    if "updated_at" in existing_cols:
+        current_dict["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if "last_verified_at" in existing_cols:
+        current_dict["last_verified_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    if "last_verified_date" in existing_cols:
+        current_dict["last_verified_date"] = datetime.now().strftime("%Y-%m-%d")
 
-    fields = [k for k in updates.keys() if k not in ("code", "created_at")] + ["updated_at", "last_verified_at", "last_verified_date"]
+    fields = [k for k in updates.keys() if k in existing_cols and k not in ("code", "created_at")]
+    if "updated_at" in existing_cols and "updated_at" not in fields:
+        fields.append("updated_at")
+    if "last_verified_at" in existing_cols and "last_verified_at" not in fields:
+        fields.append("last_verified_at")
+    if "last_verified_date" in existing_cols and "last_verified_date" not in fields:
+        fields.append("last_verified_date")
+
     set_clauses = [f"{k} = ?" for k in fields]
     vals = [current_dict[k] for k in fields] + [code]
 
