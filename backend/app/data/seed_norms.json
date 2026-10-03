@@ -1,5 +1,25 @@
 [
   {
+    "code": "D.S N.° 011-2023-MINAM",
+    "norm_type": "Decreto Supremo",
+    "norm_number": "011-2023",
+    "title": "Decreto Supremo que aprueba los Estándares de Calidad Ambiental (ECA) de aire de los parámetros cadmio, arsénico y cromo en material particulado menor a diez micras (PM10).",
+    "issuing_entity": "MINAM",
+    "instrument": "ECA",
+    "environmental_medium": null,
+    "sector": null,
+    "year": 2023,
+    "publication_date": null,
+    "effective_date": null,
+    "status": "VIGENTE",
+    "modifying_norm": null,
+    "derogating_norm": null,
+    "official_url": "https://www.gob.pe/institucion/minam/normas-legales/4880911-0011-2023-minam",
+    "alternate_url": null,
+    "summary": null,
+    "last_verified_date": null
+  },
+  {
     "code": "D.S. 001-2020-EM",
     "norm_type": null,
     "norm_number": "001-2020",
