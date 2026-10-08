@@ -16,9 +16,23 @@ def create_parameters():
         annex, table_ref, art_ref, entity, url, status="VIGENTE",
         mod_norm=None, derog_norm=None, verif_status="VERIFICADO"
     ):
+        m_lower = (medium or "").lower()
+        if "efluente" in m_lower or "alcantarillado" in m_lower or "agua" in m_lower:
+            std_medium = "Agua"
+        elif "emision" in m_lower or "aire" in m_lower:
+            std_medium = "Aire"
+        elif "suelo" in m_lower:
+            std_medium = "Suelo"
+        elif "ruido" in m_lower:
+            std_medium = "Ruido"
+        elif "radiaci" in m_lower:
+            std_medium = "Radiación no ionizante"
+        else:
+            std_medium = medium
+
         params.append({
             "instrument": instrument,
-            "environmental_medium": medium,
+            "environmental_medium": std_medium,
             "sector": sector,
             "subsector": subsector,
             "activity": activity,
