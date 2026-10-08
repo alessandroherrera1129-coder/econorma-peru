@@ -1171,7 +1171,13 @@
             </div>
             <div>
               <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Medio Ambiental *</label>
-              <input type="text" id="editParamMedium" required placeholder="Agua, Aire, Suelo, Ruido, Efluentes..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+              <select id="editParamMedium" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium">
+                <option value="Agua">Agua</option>
+                <option value="Aire">Aire</option>
+                <option value="Radiación no ionizante">Radiación no ionizante</option>
+                <option value="Suelo">Suelo</option>
+                <option value="Ruido">Ruido</option>
+              </select>
             </div>
             <div>
               <label class="font-bold text-slate-700 dark:text-slate-300 block mb-1">Sector (opcional)</label>
