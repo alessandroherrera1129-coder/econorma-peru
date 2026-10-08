@@ -56,7 +56,7 @@ class NormResponse(NormBase):
 
 class ParameterBase(BaseModel):
     instrument: str = Field(..., description="ECA / LMP / VMA")
-    environmental_medium: str = Field(..., description="Agua, Aire, Suelo, Ruido, RNI, Efluentes, Emisiones")
+    environmental_medium: str = Field(..., description="Agua, Aire, Suelo, Ruido, Radiación no ionizante")
     sector: Optional[str] = Field(None, description="Minería, Hidrocarburos, Pesquería, PTAR, etc.")
     subsector: Optional[str] = None
     activity: Optional[str] = None
