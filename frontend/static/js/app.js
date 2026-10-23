@@ -979,21 +979,25 @@ const EcoNorma = (function() {
   }
 
   function renderSkeletonLoaders() {
-    return Array(6).fill(0).map(() => `
-      <div class="glass-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
-        <div class="flex justify-between items-center">
-          <div class="h-6 w-20 skeleton rounded-full"></div>
-          <div class="h-5 w-28 skeleton rounded-full"></div>
-        </div>
-        <div class="h-7 w-3/4 skeleton rounded-lg"></div>
-        <div class="h-4 w-1/2 skeleton rounded"></div>
-        <div class="h-10 w-full skeleton rounded-xl"></div>
-        <div class="flex gap-2 pt-2">
-          <div class="h-9 flex-1 skeleton rounded-lg"></div>
-          <div class="h-9 flex-1 skeleton rounded-lg"></div>
-        </div>
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
+        ${Array(6).fill(0).map(() => `
+          <div class="glass-card rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center">
+              <div class="h-6 w-20 skeleton rounded-full"></div>
+              <div class="h-5 w-28 skeleton rounded-full"></div>
+            </div>
+            <div class="h-7 w-3/4 skeleton rounded-lg"></div>
+            <div class="h-4 w-1/2 skeleton rounded"></div>
+            <div class="h-10 w-full skeleton rounded-xl"></div>
+            <div class="flex gap-2 pt-2">
+              <div class="h-9 flex-1 skeleton rounded-lg"></div>
+              <div class="h-9 flex-1 skeleton rounded-lg"></div>
+            </div>
+          </div>
+        `).join('')}
       </div>
-    `).join('');
+    `;
   }
 
   function renderErrorState(msg) {
@@ -1095,11 +1099,10 @@ const EcoNorma = (function() {
     if (state.mode === 'sector') {
       renderSectorGroupedResults();
     } else {
+      dom.resultsContainer.className = 'w-full';
       if (state.viewMode === 'cards') {
-        dom.resultsContainer.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
         dom.resultsContainer.innerHTML = renderCardsGridHtml(state.results);
       } else {
-        dom.resultsContainer.className = 'col-span-full';
         dom.resultsContainer.innerHTML = renderTableSectionHtml(state.results);
       }
     }
