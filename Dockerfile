@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el código fuente completo
 COPY . .
 
-# Generar y verificar la base de datos de semillas oficiales
-RUN python scripts/generate_seed_parameters.py && python scripts/verify_data.py
+# Verificar la base de datos de semillas oficiales
+RUN python scripts/verify_data.py
 
 # Exponer el puerto
 EXPOSE 8000

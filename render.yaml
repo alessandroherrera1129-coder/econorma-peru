@@ -2,7 +2,7 @@ services:
   - type: web
     name: econorma-peru
     env: python
-    buildCommand: "pip install -r requirements.txt && python scripts/generate_seed_parameters.py && python scripts/verify_data.py"
+    buildCommand: "pip install -r requirements.txt && python scripts/verify_data.py"
     startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
     plan: free
     autoDeploy: true
