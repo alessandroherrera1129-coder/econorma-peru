@@ -4,6 +4,7 @@ EcoNorma Perú - Datos Oficiales Verificados
 """
 import json
 import os
+import sys
 from pathlib import Path
 
 def create_parameters():
@@ -606,10 +607,21 @@ def create_parameters():
     return params
 
 if __name__ == "__main__":
-    out_dir = Path(r"C:\Users\USER\.gemini\antigravity\scratch\econorma-peru\backend\app\data")
+    out_dir = Path(__file__).resolve().parent.parent / "backend" / "app" / "data"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / "seed_parameters.json"
     
+    # Proteger semillas enriquecidas existentes
+    if out_file.exists():
+        try:
+            with open(out_file, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+            if existing and "regulated_object" in existing[0]:
+                print(f"[INFO] Semillas ya enriquecidas con la nueva arquitectura en {out_file}. Se omite sobrescritura.")
+                sys.exit(0)
+        except Exception:
+            pass
+
     parameters = create_parameters()
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(parameters, f, ensure_ascii=False, indent=2)
