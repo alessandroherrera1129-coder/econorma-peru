@@ -154,3 +154,191 @@ code, .font-mono {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Filter Pills & Interactive Controls */
+.inst-pill, .medium-pill {
+  background: #FFFFFF;
+  color: #475569;
+  border-color: #E2E8F0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .inst-pill, .dark .medium-pill {
+  background: #0F172A;
+  color: #94A3B8;
+  border-color: #334155;
+}
+
+.inst-pill:hover, .medium-pill:hover {
+  border-color: #0F766E;
+  color: #0F766E;
+  transform: translateY(-1px);
+}
+
+.dark .inst-pill:hover, .dark .medium-pill:hover {
+  border-color: #14B8A6;
+  color: #14B8A6;
+}
+
+/* Active Instrument Pills */
+.inst-pill.active[data-inst="TODOS"] {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+  border-color: #0F172A !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+.dark .inst-pill.active[data-inst="TODOS"] {
+  background: #F8FAFC !important;
+  color: #0F172A !important;
+  border-color: #F8FAFC !important;
+}
+
+.inst-pill.active[data-inst="ECA"] {
+  background: #0284C7 !important;
+  color: #FFFFFF !important;
+  border-color: #0284C7 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.inst-pill.active[data-inst="LMP"] {
+  background: #D97706 !important;
+  color: #FFFFFF !important;
+  border-color: #D97706 !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+.inst-pill.active[data-inst="VMA"] {
+  background: #7E22CE !important;
+  color: #FFFFFF !important;
+  border-color: #7E22CE !important;
+  box-shadow: 0 4px 12px rgba(126, 34, 206, 0.35);
+}
+
+/* Active Medium Pills */
+.medium-pill.active[data-med="TODOS"] {
+  background: #0F766E !important;
+  color: #FFFFFF !important;
+  border-color: #0F766E !important;
+  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.35);
+}
+.dark .medium-pill.active[data-med="TODOS"] {
+  background: #0D9488 !important;
+  color: #FFFFFF !important;
+  border-color: #0D9488 !important;
+}
+
+.medium-pill.active[data-med="Agua"] {
+  background: #0284C7 !important;
+  color: #FFFFFF !important;
+  border-color: #0284C7 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+.medium-pill.active[data-med="Agua"] svg {
+  color: #FFFFFF !important;
+}
+
+.medium-pill.active[data-med="Aire"] {
+  background: #0D9488 !important;
+  color: #FFFFFF !important;
+  border-color: #0D9488 !important;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+}
+.medium-pill.active[data-med="Aire"] svg {
+  color: #FFFFFF !important;
+}
+
+.medium-pill.active[data-med="Suelo"] {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border-color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+.medium-pill.active[data-med="Suelo"] svg {
+  color: #FFFFFF !important;
+}
+
+.medium-pill.active[data-med="Ruido"] {
+  background: #EA580C !important;
+  color: #FFFFFF !important;
+  border-color: #EA580C !important;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+}
+.medium-pill.active[data-med="Ruido"] svg {
+  color: #FFFFFF !important;
+}
+
+.medium-pill.active[data-med="Radiación no ionizante"] {
+  background: #6366F1 !important;
+  color: #FFFFFF !important;
+  border-color: #6366F1 !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+}
+.medium-pill.active[data-med="Radiación no ionizante"] svg {
+  color: #FFFFFF !important;
+}
+
+/* Sector Relation Type Badges */
+.badge-rel-specific {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+.dark .badge-rel-specific {
+  background: rgba(180, 83, 9, 0.25);
+  color: #FDE68A;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+.badge-rel-general {
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+.dark .badge-rel-general {
+  background: rgba(2, 132, 199, 0.25);
+  color: #7DD3FC;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.badge-rel-conditional {
+  background: #F3E8FF;
+  color: #6B21A8;
+  border: 1px solid #E9D5FF;
+}
+.dark .badge-rel-conditional {
+  background: rgba(126, 34, 206, 0.25);
+  color: #D8B4FE;
+  border: 1px solid rgba(192, 132, 252, 0.35);
+}
+
+/* Mode Selection Tabs */
+.mode-tab {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease-in-out;
+}
+.mode-tab.active {
+  background: #0F766E !important;
+  color: #FFFFFF !important;
+  border-color: #0F766E !important;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.3);
+}
+.dark .mode-tab.active {
+  background: #0D9488 !important;
+  color: #FFFFFF !important;
+  border-color: #0D9488 !important;
+}
+
+/* Sector Explorer Cards */
+.sector-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.sector-card:hover {
+  transform: translateY(-2px);
+  border-color: #0F766E;
+  box-shadow: 0 10px 20px -5px rgba(15, 118, 110, 0.15);
+}
+
