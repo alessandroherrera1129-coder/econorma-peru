@@ -8,17 +8,24 @@ const EcoNorma = (function() {
   // Estado Centralizado
   const state = {
     query: '',
+    mode: 'parameter', // 'parameter' | 'instrument' | 'sector'
     instrument: 'TODOS',
     medium: 'TODOS',
     sector: 'TODOS',
+    regulatedObject: 'TODOS',
+    sectorRelationType: 'TODOS',
     category: 'TODOS',
     subcategory: 'TODOS',
+    evaluationPeriod: 'TODOS',
+    annex: 'TODOS',
+    instrumentModeTab: 'ECA', // 'ECA' | 'LMP' | 'VMA'
+    ecaMedium: 'Agua',
     status: 'TODOS',
     normCode: 'TODOS',
     entity: 'TODOS',
     year: '',
     page: 1,
-    pageSize: 20,
+    pageSize: 50,
     totalResults: 0,
     results: [],
     viewMode: 'cards', // 'cards' | 'table'
@@ -63,8 +70,11 @@ const EcoNorma = (function() {
     dom.mobileMenu = document.getElementById('mobileMenu');
     
     dom.mainSearchInput = document.getElementById('mainSearchInput');
+    dom.filterSearchInput = document.getElementById('filterSearchInput');
     dom.autocompleteDropdown = document.getElementById('autocompleteDropdown');
+    dom.filterAutocompleteDropdown = document.getElementById('filterAutocompleteDropdown');
     dom.clearSearchBtn = document.getElementById('clearSearchBtn');
+    dom.clearFilterSearchBtn = document.getElementById('clearFilterSearchBtn');
     dom.quickChips = document.querySelectorAll('.quick-chip');
     
     dom.views = {
@@ -88,6 +98,11 @@ const EcoNorma = (function() {
     dom.viewTableBtn = document.getElementById('viewTableBtn');
     dom.exportCsvBtn = document.getElementById('exportCsvBtn');
     dom.shareQueryBtn = document.getElementById('shareQueryBtn');
+
+    dom.toggleAdvancedFiltersBtn = document.getElementById('toggleAdvancedFiltersBtn');
+    dom.advancedFiltersContainer = document.getElementById('advancedFiltersContainer');
+    dom.advancedFiltersChevron = document.getElementById('advancedFiltersChevron');
+    dom.advancedFiltersBadge = document.getElementById('advancedFiltersBadge');
 
     dom.resultsContainer = document.getElementById('resultsContainer');
     dom.resultsCount = document.getElementById('resultsCount');
@@ -197,6 +212,16 @@ const EcoNorma = (function() {
     populateSelect(dom.filterCategory, state.filterOptions.categories);
     populateSelect(dom.filterEntity, state.filterOptions.issuing_entities);
 
+    const lmpSecSel = document.getElementById('lmpSectorSelect');
+    if (lmpSecSel && state.filterOptions.lmp_mapping) {
+      populateSelect(lmpSecSel, state.filterOptions.lmp_mapping.sectors);
+    }
+
+    const secRegObjSel = document.getElementById('sectorFilterRegulatedObject');
+    if (secRegObjSel && state.filterOptions.regulated_objects) {
+      populateSelect(secRegObjSel, state.filterOptions.regulated_objects);
+    }
+
     const adminMedium = document.getElementById('adminFilterMedium');
     const adminSector = document.getElementById('adminFilterSector');
     const adminNorm = document.getElementById('adminFilterNorm');
@@ -226,11 +251,17 @@ const EcoNorma = (function() {
     state.activeTab = tab;
     let hash = `#${tab}`;
     const searchParams = new URLSearchParams();
+    if (params.mode) searchParams.set('mode', params.mode);
     if (params.q) searchParams.set('q', params.q);
     if (params.instrument && params.instrument !== 'TODOS') searchParams.set('tipo', params.instrument);
     if (params.medium && params.medium !== 'TODOS') searchParams.set('medio', params.medium);
     if (params.sector && params.sector !== 'TODOS') searchParams.set('sector', params.sector);
+    if (params.regulated_object && params.regulated_object !== 'TODOS') searchParams.set('objeto', params.regulated_object);
+    if (params.sector_relation_type && params.sector_relation_type !== 'TODOS') searchParams.set('relacion', params.sector_relation_type);
     if (params.category && params.category !== 'TODOS') searchParams.set('categoria', params.category);
+    if (params.subcategory && params.subcategory !== 'TODOS') searchParams.set('subcategoria', params.subcategory);
+    if (params.evaluation_period && params.evaluation_period !== 'TODOS') searchParams.set('periodo', params.evaluation_period);
+    if (params.annex && params.annex !== 'TODOS') searchParams.set('anexo', params.annex);
     if (params.normCode && params.normCode !== 'TODOS') searchParams.set('norma', params.normCode);
     if (params.paramName) searchParams.set('parametro', params.paramName);
 
@@ -268,24 +299,36 @@ const EcoNorma = (function() {
 
     if (dom.mobileMenu) dom.mobileMenu.classList.add('hidden');
 
-    if (state.activeTab === 'busqueda' || state.activeTab === 'eca' || state.activeTab === 'lmp' || state.activeTab === 'vma') {
-      if (state.activeTab === 'eca') state.instrument = 'ECA';
-      else if (state.activeTab === 'lmp') state.instrument = 'LMP';
-      else if (state.activeTab === 'vma') state.instrument = 'VMA';
-      
+    if (['busqueda', 'instrumento', 'sector', 'eca', 'lmp', 'vma'].includes(state.activeTab)) {
+      if (state.activeTab === 'instrumento' || state.activeTab === 'eca' || state.activeTab === 'lmp' || state.activeTab === 'vma') {
+        state.mode = 'instrument';
+        if (state.activeTab === 'eca') state.instrumentModeTab = 'ECA';
+        else if (state.activeTab === 'lmp') state.instrumentModeTab = 'LMP';
+        else if (state.activeTab === 'vma') state.instrumentModeTab = 'VMA';
+      } else if (state.activeTab === 'sector') {
+        state.mode = 'sector';
+      } else if (params.get('mode')) {
+        state.mode = params.get('mode');
+      }
+
       if (params.get('q')) state.query = params.get('q');
       if (params.get('parametro')) state.query = params.get('parametro');
       if (params.get('tipo')) state.instrument = params.get('tipo');
       if (params.get('medio')) state.medium = params.get('medio');
       if (params.get('sector')) state.sector = params.get('sector');
+      if (params.get('objeto')) state.regulatedObject = params.get('objeto');
+      if (params.get('relacion')) state.sectorRelationType = params.get('relacion');
       if (params.get('categoria')) state.category = params.get('categoria');
+      if (params.get('subcategoria')) state.subcategory = params.get('subcategoria');
+      if (params.get('periodo')) state.evaluationPeriod = params.get('periodo');
+      if (params.get('anexo')) state.annex = params.get('anexo');
       if (params.get('norma')) state.normCode = params.get('norma');
 
+      if (dom.views.busqueda) dom.views.busqueda.classList.remove('hidden');
+
+      setSearchMode(state.mode, false);
       syncFiltersToUI();
       executeSearch();
-      if (state.activeTab !== 'busqueda') {
-        if (dom.views.busqueda) dom.views.busqueda.classList.remove('hidden');
-      }
     } else if (state.activeTab === 'normas') {
       loadNormsView(params.get('q') || '');
     } else if (state.activeTab === 'comparador') {
@@ -298,13 +341,439 @@ const EcoNorma = (function() {
     if (window.lucide) window.lucide.createIcons();
   }
 
+  // --- MODALIDAD DE ARQUITECTURA DE BÚSQUEDA (MODO A, B Y C) ---
+
+  function setSearchMode(mode, doSearch = true) {
+    state.mode = mode || 'parameter';
+    state.page = 1;
+
+    const modeBtns = {
+      parameter: document.getElementById('modeBtnParameter'),
+      instrument: document.getElementById('modeBtnInstrument'),
+      sector: document.getElementById('modeBtnSector')
+    };
+    Object.keys(modeBtns).forEach(k => {
+      if (modeBtns[k]) {
+        modeBtns[k].classList.toggle('active', k === state.mode);
+      }
+    });
+
+    const pParam = document.getElementById('modePanelParameter');
+    const pInst = document.getElementById('modePanelInstrument');
+    const pSec = document.getElementById('modePanelSector');
+
+    if (pParam) pParam.classList.toggle('hidden', state.mode !== 'parameter');
+    if (pInst) pInst.classList.toggle('hidden', state.mode !== 'instrument');
+    if (pSec) pSec.classList.toggle('hidden', state.mode !== 'sector');
+
+    if (state.mode === 'instrument') {
+      if (!state.instrumentModeTab || state.instrumentModeTab === 'TODOS') {
+        state.instrumentModeTab = state.instrument !== 'TODOS' ? state.instrument : 'ECA';
+      }
+      setInstrumentModeTab(state.instrumentModeTab, false);
+    } else if (state.mode === 'sector') {
+      if (!state.sector || state.sector === 'TODOS') {
+        state.sector = 'Minería y Metalurgia';
+      }
+      state.instrument = 'TODOS';
+      setSectorModeSector(state.sector, false);
+    } else {
+      // Modo Parámetro: búsqueda global y limpia
+    }
+
+    syncPillsToState();
+    if (doSearch) executeSearch();
+  }
+
+  // --- MODO B: EXPLORAR POR INSTRUMENTO ---
+
+  function setInstrumentModeTab(inst, doSearch = true) {
+    state.instrumentModeTab = inst;
+    state.instrument = inst;
+    state.page = 1;
+
+    document.querySelectorAll('.inst-mode-tab').forEach(btn => {
+      const bInst = btn.getAttribute('data-inst');
+      btn.classList.toggle('active', bInst === inst);
+    });
+
+    const subEca = document.getElementById('instSubpanelEca');
+    const subLmp = document.getElementById('instSubpanelLmp');
+    const subVma = document.getElementById('instSubpanelVma');
+
+    if (subEca) subEca.classList.toggle('hidden', inst !== 'ECA');
+    if (subLmp) subLmp.classList.toggle('hidden', inst !== 'LMP');
+    if (subVma) subVma.classList.toggle('hidden', inst !== 'VMA');
+
+    if (inst === 'ECA') {
+      state.sector = 'TODOS';
+      state.annex = 'TODOS';
+      state.sectorRelationType = 'TODOS';
+      state.regulatedObject = 'TODOS';
+      if (!state.ecaMedium || state.ecaMedium === 'TODOS') state.ecaMedium = 'Agua';
+      setEcaMedium(state.ecaMedium, false);
+    } else if (inst === 'LMP') {
+      state.category = 'TODOS';
+      state.subcategory = 'TODOS';
+      state.annex = 'TODOS';
+      state.sectorRelationType = 'ESPECIFICA_SECTOR';
+      updateLmpCascadingOptions();
+    } else if (inst === 'VMA') {
+      state.medium = 'Agua';
+      state.sector = 'TODOS';
+      state.category = 'TODOS';
+      state.subcategory = 'TODOS';
+      state.evaluationPeriod = 'TODOS';
+      state.sectorRelationType = 'APLICACION_CONDICIONADA';
+      const vmaAnnex = document.getElementById('vmaAnnexSelect');
+      if (vmaAnnex) state.annex = vmaAnnex.value;
+    }
+
+    if (doSearch) executeSearch();
+  }
+
+  function setEcaMedium(medium, doSearch = true) {
+    state.ecaMedium = medium;
+    state.medium = medium;
+    state.page = 1;
+
+    document.querySelectorAll('.eca-med-pill').forEach(btn => {
+      const bMed = btn.getAttribute('data-eca-med');
+      btn.classList.toggle('active', bMed === medium);
+    });
+
+    const wControls = document.getElementById('ecaWaterControls');
+    const aControls = document.getElementById('ecaAirControls');
+    const sControls = document.getElementById('ecaSoilControls');
+    const nControls = document.getElementById('ecaNoiseControls');
+    const rControls = document.getElementById('ecaRniControls');
+
+    if (wControls) wControls.classList.toggle('hidden', medium !== 'Agua');
+    if (aControls) aControls.classList.toggle('hidden', medium !== 'Aire');
+    if (sControls) sControls.classList.toggle('hidden', medium !== 'Suelo');
+    if (nControls) nControls.classList.toggle('hidden', medium !== 'Ruido');
+    if (rControls) rControls.classList.toggle('hidden', medium !== 'Radiación no ionizante');
+
+    if (medium === 'Agua') {
+      state.evaluationPeriod = 'TODOS';
+      const catSel = document.getElementById('ecaCategorySelect');
+      state.category = catSel ? catSel.value : 'TODOS';
+      updateEcaSubcategories();
+    } else if (medium === 'Aire') {
+      state.category = 'TODOS';
+      state.subcategory = 'TODOS';
+      const periodSel = document.getElementById('ecaAirPeriodSelect');
+      state.evaluationPeriod = periodSel ? periodSel.value : 'TODOS';
+    } else if (medium === 'Suelo') {
+      state.evaluationPeriod = 'TODOS';
+      state.subcategory = 'TODOS';
+      const soilSel = document.getElementById('ecaSoilUseSelect');
+      state.category = soilSel ? soilSel.value : 'TODOS';
+    } else if (medium === 'Ruido') {
+      state.evaluationPeriod = 'TODOS';
+      state.subcategory = 'TODOS';
+      const noiseSel = document.getElementById('ecaNoiseZoneSelect');
+      state.category = noiseSel ? noiseSel.value : 'TODOS';
+    } else {
+      state.category = 'TODOS';
+      state.subcategory = 'TODOS';
+      state.evaluationPeriod = 'TODOS';
+    }
+
+    if (doSearch) executeSearch();
+  }
+
+  function onEcaCategoryChange() {
+    const sel = document.getElementById('ecaCategorySelect');
+    state.category = sel ? sel.value : 'TODOS';
+    state.subcategory = 'TODOS';
+    state.page = 1;
+    updateEcaSubcategories();
+    executeSearch();
+  }
+
+  function onEcaSubcategoryChange() {
+    const sel = document.getElementById('ecaSubcategorySelect');
+    state.subcategory = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  function updateEcaSubcategories() {
+    const subSel = document.getElementById('ecaSubcategorySelect');
+    if (!subSel) return;
+    const cat = state.category;
+    subSel.innerHTML = '<option value="TODOS">Todas las subcategorías</option>';
+    
+    const allSubs = state.filterOptions.subcategories || [];
+    let relevantSubs = allSubs;
+    if (cat === 'Categoría 1') {
+      relevantSubs = allSubs.filter(s => s.includes('A1') || s.includes('A2') || s.includes('A3') || s.includes('B1') || s.includes('B2') || s.includes('Poblacional') || s.includes('Recreacional'));
+    } else if (cat === 'Categoría 2') {
+      relevantSubs = allSubs.filter(s => s.includes('C1') || s.includes('C2') || s.includes('C3') || s.includes('C4') || s.includes('Extracción') || s.includes('Moluscos') || s.includes('Acuicultura'));
+    } else if (cat === 'Categoría 3') {
+      relevantSubs = allSubs.filter(s => s.includes('D1') || s.includes('D2') || s.includes('Riego') || s.includes('Bebida'));
+    } else if (cat === 'Categoría 4') {
+      relevantSubs = allSubs.filter(s => s.includes('E1') || s.includes('E2') || s.includes('E3') || s.includes('Lagos') || s.includes('Ríos') || s.includes('Marinos') || s.includes('Ecosistemas'));
+    }
+
+    relevantSubs.forEach(s => {
+      if (!s) return;
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      subSel.appendChild(opt);
+    });
+
+    if (state.subcategory && state.subcategory !== 'TODOS') {
+      subSel.value = state.subcategory;
+    }
+  }
+
+  function onEcaAirPeriodChange() {
+    const sel = document.getElementById('ecaAirPeriodSelect');
+    state.evaluationPeriod = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  function onEcaSoilUseChange() {
+    const sel = document.getElementById('ecaSoilUseSelect');
+    state.category = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  function onEcaNoiseZoneChange() {
+    const sel = document.getElementById('ecaNoiseZoneSelect');
+    state.category = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  // --- CASCADA BIDIRECCIONAL LMP ---
+
+  function updateLmpCascadingOptions() {
+    const lmpSecSel = document.getElementById('lmpSectorSelect');
+    const lmpMedSel = document.getElementById('lmpMediumSelect');
+    if (!lmpSecSel || !lmpMedSel || !state.filterOptions.lmp_mapping) return;
+
+    const mapping = state.filterOptions.lmp_mapping;
+    const currentSector = state.sector;
+    const currentMedium = state.medium;
+
+    // Actualizar sectores según medio seleccionado
+    lmpSecSel.innerHTML = '<option value="TODOS">Todos los sectores con LMP</option>';
+    let allowedSectors = mapping.sectors || [];
+    if (currentMedium && currentMedium !== 'TODOS' && mapping.medium_to_sectors && mapping.medium_to_sectors[currentMedium]) {
+      allowedSectors = mapping.medium_to_sectors[currentMedium];
+    }
+    allowedSectors.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      lmpSecSel.appendChild(opt);
+    });
+    if (allowedSectors.includes(currentSector)) {
+      lmpSecSel.value = currentSector;
+    } else {
+      lmpSecSel.value = 'TODOS';
+      state.sector = 'TODOS';
+    }
+
+    // Actualizar medios según sector seleccionado
+    lmpMedSel.innerHTML = '<option value="TODOS">Todos los medios / objetos</option>';
+    let allowedMedia = mapping.media || ['Agua', 'Aire'];
+    if (currentSector && currentSector !== 'TODOS' && mapping.sector_to_media && mapping.sector_to_media[currentSector]) {
+      allowedMedia = mapping.sector_to_media[currentSector];
+    }
+    allowedMedia.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m === 'Agua' ? 'Agua (Efluentes líquidos)' : (m === 'Aire' ? 'Aire (Emisiones gaseosas)' : m);
+      lmpMedSel.appendChild(opt);
+    });
+    if (allowedMedia.includes(currentMedium)) {
+      lmpMedSel.value = currentMedium;
+    } else {
+      lmpMedSel.value = 'TODOS';
+      state.medium = 'TODOS';
+    }
+  }
+
+  function onLmpSectorChange() {
+    const sel = document.getElementById('lmpSectorSelect');
+    state.sector = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    updateLmpCascadingOptions();
+    executeSearch();
+  }
+
+  function onLmpMediumChange() {
+    const sel = document.getElementById('lmpMediumSelect');
+    state.medium = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    updateLmpCascadingOptions();
+    executeSearch();
+  }
+
+  function onVmaAnnexChange() {
+    const sel = document.getElementById('vmaAnnexSelect');
+    state.annex = sel ? sel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  // --- MODO C: EXPLORAR POR SECTOR PRODUCTIVO ---
+
+  function setSectorModeSector(sector, doSearch = true) {
+    state.sector = sector || 'Minería y Metalurgia';
+    state.page = 1;
+
+    document.querySelectorAll('.sec-pill').forEach(btn => {
+      const bSec = btn.getAttribute('data-sec');
+      btn.classList.toggle('active', bSec === state.sector);
+    });
+
+    const lbl = document.getElementById('currentSectorLabel');
+    if (lbl) lbl.textContent = state.sector;
+
+    if (doSearch) executeSearch();
+  }
+
+  function onSectorSecondaryFilterChange() {
+    const medSel = document.getElementById('sectorFilterMedium');
+    const objSel = document.getElementById('sectorFilterRegulatedObject');
+    const relSel = document.getElementById('sectorFilterRelationType');
+
+    state.medium = medSel ? medSel.value : 'TODOS';
+    state.regulatedObject = objSel ? objSel.value : 'TODOS';
+    state.sectorRelationType = relSel ? relSel.value : 'TODOS';
+    state.page = 1;
+    executeSearch();
+  }
+
+  function onSubSearchInput(e) {
+    const val = e.target.value;
+    state.query = val;
+
+    // Sincronizar inputs de búsqueda
+    ['filterSearchInput', 'ecaSearchInput', 'lmpSearchInput', 'vmaSearchInput', 'sectorSearchInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el !== e.target) el.value = val;
+    });
+
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      state.page = 1;
+      executeSearch();
+    }, 200);
+  }
+
   function syncFiltersToUI() {
     if (dom.mainSearchInput) dom.mainSearchInput.value = state.query;
+    if (dom.filterSearchInput) dom.filterSearchInput.value = state.query;
     if (dom.filterInstrument) dom.filterInstrument.value = state.instrument;
     if (dom.filterMedium) dom.filterMedium.value = state.medium;
     if (dom.filterSector) dom.filterSector.value = state.sector;
     if (dom.filterCategory) dom.filterCategory.value = state.category;
+    if (dom.filterEntity) dom.filterEntity.value = state.entity;
     if (dom.filterStatus) dom.filterStatus.value = state.status;
+    if (dom.clearSearchBtn) dom.clearSearchBtn.classList.toggle('hidden', !state.query);
+    if (dom.clearFilterSearchBtn) dom.clearFilterSearchBtn.classList.toggle('hidden', !state.query);
+    syncPillsToState();
+  }
+
+  function syncPillsToState() {
+    document.querySelectorAll('.inst-pill').forEach(btn => {
+      const inst = btn.getAttribute('data-inst');
+      btn.classList.toggle('active', inst === state.instrument);
+    });
+
+    document.querySelectorAll('.medium-pill').forEach(btn => {
+      const med = btn.getAttribute('data-med');
+      btn.classList.toggle('active', med === state.medium);
+    });
+
+    let advancedCount = 0;
+    if (state.sector && state.sector !== 'TODOS') advancedCount++;
+    if (state.category && state.category !== 'TODOS') advancedCount++;
+    if (state.entity && state.entity !== 'TODOS') advancedCount++;
+    if (state.status && state.status !== 'TODOS') advancedCount++;
+
+    if (dom.advancedFiltersBadge) {
+      if (advancedCount > 0) {
+        dom.advancedFiltersBadge.textContent = `${advancedCount} activo${advancedCount > 1 ? 's' : ''}`;
+        dom.advancedFiltersBadge.classList.remove('hidden');
+      } else {
+        dom.advancedFiltersBadge.classList.add('hidden');
+      }
+    }
+  }
+
+  function setInstrumentFilter(inst) {
+    state.instrument = inst || 'TODOS';
+    state.page = 1;
+    if (dom.filterInstrument) dom.filterInstrument.value = state.instrument;
+    syncPillsToState();
+    executeSearch();
+  }
+
+  function setMediumFilter(med) {
+    state.medium = med || 'TODOS';
+    state.page = 1;
+    if (dom.filterMedium) dom.filterMedium.value = state.medium;
+    syncPillsToState();
+    executeSearch();
+  }
+
+  function toggleAdvancedFilters() {
+    if (!dom.advancedFiltersContainer) return;
+    const isHidden = dom.advancedFiltersContainer.classList.contains('hidden');
+    if (isHidden) {
+      dom.advancedFiltersContainer.classList.remove('hidden');
+      if (dom.advancedFiltersChevron) dom.advancedFiltersChevron.classList.add('rotate-180');
+    } else {
+      dom.advancedFiltersContainer.classList.add('hidden');
+      if (dom.advancedFiltersChevron) dom.advancedFiltersChevron.classList.remove('rotate-180');
+    }
+  }
+
+  function onFilterSelectChange() {
+    if (dom.filterSector) state.sector = dom.filterSector.value;
+    if (dom.filterCategory) state.category = dom.filterCategory.value;
+    if (dom.filterEntity) state.entity = dom.filterEntity.value;
+    if (dom.filterStatus) state.status = dom.filterStatus.value;
+    state.page = 1;
+    syncPillsToState();
+    executeSearch();
+  }
+
+  function clearSearchInput() {
+    state.query = '';
+    ['mainSearchInput', 'filterSearchInput', 'ecaSearchInput', 'lmpSearchInput', 'vmaSearchInput', 'sectorSearchInput'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    if (dom.clearSearchBtn) dom.clearSearchBtn.classList.add('hidden');
+    if (dom.clearFilterSearchBtn) dom.clearFilterSearchBtn.classList.add('hidden');
+    hideAutocomplete();
+    executeSearch();
+  }
+
+  function onSearchKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      hideAutocomplete();
+      state.page = 1;
+      if (state.activeTab !== 'busqueda') {
+        navigateTo('busqueda', { q: state.query, mode: state.mode, instrument: state.instrument, medium: state.medium });
+      } else {
+        executeSearch();
+      }
+    } else if (e.key === 'Escape') {
+      hideAutocomplete();
+    }
   }
 
   let debounceTimeout = null;
@@ -313,55 +782,71 @@ const EcoNorma = (function() {
     state.query = val;
     
     if (dom.clearSearchBtn) dom.clearSearchBtn.classList.toggle('hidden', val.length === 0);
+    if (dom.clearFilterSearchBtn) dom.clearFilterSearchBtn.classList.toggle('hidden', val.length === 0);
+
+    if (e.target === dom.mainSearchInput && dom.filterSearchInput) {
+      dom.filterSearchInput.value = val;
+    } else if (e.target === dom.filterSearchInput && dom.mainSearchInput) {
+      dom.mainSearchInput.value = val;
+    }
 
     clearTimeout(debounceTimeout);
     if (val.trim().length >= 1) {
       debounceTimeout = setTimeout(() => {
-        fetchAutocomplete(val.trim());
-      }, 180);
+        fetchAutocomplete(val.trim(), e.target);
+      }, 160);
     } else {
       hideAutocomplete();
+      if (state.activeTab === 'busqueda') {
+        state.page = 1;
+        executeSearch();
+      }
     }
   }
 
-  async function fetchAutocomplete(q) {
+  async function fetchAutocomplete(q, sourceEl) {
     try {
       const res = await fetch(`/api/parameters/autocomplete?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data = await res.json();
         state.autocompleteItems = data.suggestions || [];
-        renderAutocomplete(state.autocompleteItems);
+        renderAutocomplete(state.autocompleteItems, sourceEl);
       }
     } catch (e) {
       console.warn('Error autocomplete:', e);
     }
   }
 
-  function renderAutocomplete(items) {
-    if (!dom.autocompleteDropdown) return;
+  function renderAutocomplete(items, sourceEl) {
+    const targetDropdown = (sourceEl === dom.filterSearchInput && dom.filterAutocompleteDropdown) 
+      ? dom.filterAutocompleteDropdown 
+      : dom.autocompleteDropdown;
+
+    if (!targetDropdown) return;
     if (items.length === 0) {
       hideAutocomplete();
       return;
     }
 
     state.autocompleteSelectedIndex = -1;
-    dom.autocompleteDropdown.innerHTML = '';
+    targetDropdown.innerHTML = '';
     
     items.forEach((item) => {
       const el = document.createElement('div');
       el.className = 'px-4 py-3 cursor-pointer hover:bg-emerald-50 dark:hover:bg-slate-700/60 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between transition-colors';
       el.innerHTML = `
         <div class="flex items-center space-x-3">
-          <span class="p-1.5 rounded-lg ${getInstrumentBgClass(item.instrument)} text-xs font-bold font-mono">
+          <span class="p-1.5 rounded-lg ${getInstrumentBgClass(item.instrument)} text-xs font-black font-mono">
             ${item.instrument}
           </span>
           <div>
-            <div class="font-semibold text-slate-800 dark:text-slate-100 text-sm">
+            <div class="font-bold text-slate-800 dark:text-slate-100 text-sm">
               ${highlightMatch(item.parameter_name, state.query)}
               ${item.symbol ? `<span class="text-xs text-slate-400 font-mono ml-1.5">(${item.symbol})</span>` : ''}
             </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-              Medio: ${item.environmental_medium}
+            <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+              <span>Medio: <strong>${item.environmental_medium}</strong></span>
+              ${item.category ? `<span class="text-slate-300 dark:text-slate-600">·</span><span>${item.category}</span>` : ''}
             </div>
           </div>
         </div>
@@ -371,14 +856,20 @@ const EcoNorma = (function() {
       el.addEventListener('click', () => {
         state.query = item.parameter_name;
         if (dom.mainSearchInput) dom.mainSearchInput.value = item.parameter_name;
+        if (dom.filterSearchInput) dom.filterSearchInput.value = item.parameter_name;
         hideAutocomplete();
-        navigateTo('busqueda', { q: item.parameter_name });
+        if (state.activeTab !== 'busqueda') {
+          navigateTo('busqueda', { q: item.parameter_name });
+        } else {
+          state.page = 1;
+          executeSearch();
+        }
       });
 
-      dom.autocompleteDropdown.appendChild(el);
+      targetDropdown.appendChild(el);
     });
 
-    dom.autocompleteDropdown.classList.remove('hidden');
+    targetDropdown.classList.remove('hidden');
     if (window.lucide) window.lucide.createIcons();
   }
 
@@ -387,12 +878,16 @@ const EcoNorma = (function() {
       dom.autocompleteDropdown.classList.add('hidden');
       dom.autocompleteDropdown.innerHTML = '';
     }
+    if (dom.filterAutocompleteDropdown) {
+      dom.filterAutocompleteDropdown.classList.add('hidden');
+      dom.filterAutocompleteDropdown.innerHTML = '';
+    }
   }
 
   function highlightMatch(text, query) {
     if (!query) return text;
     const regex = new RegExp(`(${escapeRegex(query)})`, 'gi');
-    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800/80 text-inherit px-0.5 rounded">$1</mark>');
+    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800/80 text-inherit px-0.5 rounded font-bold">$1</mark>');
   }
 
   function escapeRegex(str) {
@@ -408,18 +903,57 @@ const EcoNorma = (function() {
     }
   }
 
+  function getMediumBadgeClass(med) {
+    if (!med) return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    const m = med.toLowerCase();
+    if (m.includes('agua') || m.includes('efluente')) {
+      return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800';
+    }
+    if (m.includes('aire') || m.includes('emision')) {
+      return 'bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800';
+    }
+    if (m.includes('suelo')) {
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800';
+    }
+    if (m.includes('ruido')) {
+      return 'bg-orange-50 text-orange-700 border border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800';
+    }
+    if (m.includes('radiaci')) {
+      return 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800';
+    }
+    return 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+  }
+
+  function getMediumIcon(med) {
+    if (!med) return 'layers';
+    const m = med.toLowerCase();
+    if (m.includes('agua')) return 'droplets';
+    if (m.includes('aire')) return 'wind';
+    if (m.includes('suelo')) return 'mountain';
+    if (m.includes('ruido')) return 'volume-2';
+    if (m.includes('radiaci')) return 'radio';
+    return 'layers';
+  }
+
   async function executeSearch() {
     if (!dom.resultsContainer) return;
     
     dom.resultsContainer.innerHTML = renderSkeletonLoaders();
     renderActiveFilterBadges();
+    syncPillsToState();
 
     const params = new URLSearchParams();
     if (state.query) params.set('q', state.query);
+    if (state.mode) params.set('mode', state.mode);
     if (state.instrument !== 'TODOS') params.set('instrument', state.instrument);
     if (state.medium !== 'TODOS') params.set('medium', state.medium);
     if (state.sector !== 'TODOS') params.set('sector', state.sector);
+    if (state.regulatedObject !== 'TODOS') params.set('regulated_object', state.regulatedObject);
+    if (state.sectorRelationType !== 'TODOS') params.set('sector_relation_type', state.sectorRelationType);
     if (state.category !== 'TODOS') params.set('category', state.category);
+    if (state.subcategory !== 'TODOS') params.set('subcategory', state.subcategory);
+    if (state.evaluationPeriod !== 'TODOS') params.set('evaluation_period', state.evaluationPeriod);
+    if (state.annex !== 'TODOS') params.set('annex', state.annex);
     if (state.status !== 'TODOS') params.set('status', state.status);
     if (state.normCode !== 'TODOS') params.set('norm_code', state.normCode);
     if (state.entity !== 'TODOS') params.set('entity', state.entity);
@@ -481,28 +1015,56 @@ const EcoNorma = (function() {
     if (!dom.activeFiltersTags) return;
     const badges = [];
 
+    if (state.mode === 'sector') badges.push({ key: 'mode', label: `Modo: Explorar Sector (${state.sector})` });
+    else if (state.mode === 'instrument') badges.push({ key: 'mode', label: `Modo: Instrumento (${state.instrument})` });
+
     if (state.query) badges.push({ key: 'q', label: `Búsqueda: "${state.query}"` });
     if (state.instrument !== 'TODOS') badges.push({ key: 'instrument', label: `Instrumento: ${state.instrument}` });
     if (state.medium !== 'TODOS') badges.push({ key: 'medium', label: `Medio: ${state.medium}` });
-    if (state.sector !== 'TODOS') badges.push({ key: 'sector', label: `Sector: ${state.sector}` });
+    if (state.sector !== 'TODOS' && state.mode !== 'sector') badges.push({ key: 'sector', label: `Sector: ${state.sector}` });
+    if (state.regulatedObject && state.regulatedObject !== 'TODOS') badges.push({ key: 'regulatedObject', label: `Objeto: ${state.regulatedObject}` });
+    if (state.sectorRelationType && state.sectorRelationType !== 'TODOS') badges.push({ key: 'sectorRelationType', label: `Relación: ${state.sectorRelationType}` });
     if (state.category !== 'TODOS') badges.push({ key: 'category', label: `Categoría: ${state.category}` });
+    if (state.subcategory !== 'TODOS') badges.push({ key: 'subcategory', label: `Subcategoría: ${state.subcategory}` });
+    if (state.evaluationPeriod && state.evaluationPeriod !== 'TODOS') badges.push({ key: 'evaluationPeriod', label: `Periodo: ${state.evaluationPeriod}` });
+    if (state.annex && state.annex !== 'TODOS') badges.push({ key: 'annex', label: `Anexo: ${state.annex}` });
+    if (state.entity !== 'TODOS') badges.push({ key: 'entity', label: `Entidad: ${state.entity}` });
     if (state.status !== 'TODOS') badges.push({ key: 'status', label: `Estado: ${state.status}` });
 
     if (badges.length === 0) {
-      dom.activeFiltersTags.innerHTML = '<span class="text-xs text-slate-400">Sin filtros aplicados</span>';
+      dom.activeFiltersTags.innerHTML = '<span class="text-xs text-slate-400 font-medium">Mostrando todos los parámetros sin filtros</span>';
       return;
     }
 
-    dom.activeFiltersTags.innerHTML = badges.map(b => `
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-full text-xs font-semibold border border-emerald-200 dark:border-emerald-800">
-        ${b.label}
-        <button onclick="EcoNorma.removeFilter('${b.key}')" class="hover:text-emerald-950 dark:hover:text-emerald-100 focus:outline-none">
-          <i data-lucide="x" class="w-3 h-3"></i>
-        </button>
-      </span>
-    `).join('');
+    dom.activeFiltersTags.innerHTML = `
+      <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Filtros activos:</span>
+      ${badges.map(b => `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-800 shadow-xs">
+          ${b.label}
+          <button onclick="EcoNorma.removeFilter('${b.key}')" class="hover:text-emerald-950 dark:hover:text-emerald-100 focus:outline-none p-0.5 rounded-full hover:bg-emerald-200/50 dark:hover:bg-emerald-800/50" title="Quitar filtro">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </button>
+        </span>
+      `).join('')}
+      <button onclick="EcoNorma.resetAllFilters()" class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline ml-1">
+        Limpiar todo
+      </button>
+    `;
 
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  function getSectorRelationBadgeHtml(type, sectorName) {
+    switch (type) {
+      case 'ESPECIFICA_SECTOR':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold badge-rel-specific" title="LMP de emisión o vertimiento directamente aplicable a este sector"><i data-lucide="target" class="w-3 h-3"></i> Grupo 1 · Específica ${sectorName ? `(${sectorName})` : ''}</span>`;
+      case 'ECA_GENERAL':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold badge-rel-general" title="Estándar ambiental de calidad para el cuerpo receptor receptor (no exclusivo)"><i data-lucide="globe" class="w-3 h-3"></i> Grupo 2 · ECA Receptor General</span>`;
+      case 'APLICACION_CONDICIONADA':
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold badge-rel-conditional" title="Valores Máximos Admisibles aplicables exclusivamente si se descarga al alcantarillado"><i data-lucide="alert-circle" class="w-3 h-3"></i> Grupo 3 · Condicionada (Alcantarillado)</span>`;
+      default:
+        return `<span class="px-2 py-0.5 rounded text-[11px] bg-slate-100 text-slate-600">General</span>`;
+    }
   }
 
   function renderResults() {
@@ -511,6 +1073,7 @@ const EcoNorma = (function() {
     }
 
     if (state.results.length === 0) {
+      dom.resultsContainer.className = 'col-span-full';
       dom.resultsContainer.innerHTML = `
         <div class="col-span-full py-16 text-center">
           <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -529,28 +1092,132 @@ const EcoNorma = (function() {
       return;
     }
 
-    if (state.viewMode === 'cards') {
-      renderCardsView();
+    if (state.mode === 'sector') {
+      renderSectorGroupedResults();
     } else {
-      renderTableView();
+      if (state.viewMode === 'cards') {
+        dom.resultsContainer.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
+        dom.resultsContainer.innerHTML = renderCardsGridHtml(state.results);
+      } else {
+        dom.resultsContainer.className = 'col-span-full';
+        dom.resultsContainer.innerHTML = renderTableSectionHtml(state.results);
+      }
     }
 
     if (window.lucide) window.lucide.createIcons();
   }
 
-  function renderCardsView() {
-    dom.resultsContainer.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
-    dom.resultsContainer.innerHTML = state.results.map(item => `
-      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between relative group hover:border-emerald-500/50 dark:hover:border-emerald-500/50">
+  function renderSectorGroupedResults() {
+    const group1 = state.results.filter(r => r.sector_relation_type === 'ESPECIFICA_SECTOR');
+    const group2 = state.results.filter(r => r.sector_relation_type === 'ECA_GENERAL');
+    const group3 = state.results.filter(r => r.sector_relation_type === 'APLICACION_CONDICIONADA');
+
+    dom.resultsContainer.className = 'col-span-full space-y-10';
+
+    dom.resultsContainer.innerHTML = `
+      <!-- GRUPO 1: ESPECIFICA DEL SECTOR (LMP) -->
+      <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="w-3 h-3 rounded-full bg-amber-500 shrink-0"></span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                Grupo 1 · Normativa Específica del Sector (${state.sector})
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700">
+                ${group1.length} norma${group1.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+              Límites Máximos Permisibles (LMP) obligatorios en el punto de descarga (efluente o emisión) para ${state.sector}.
+            </p>
+          </div>
+        </div>
+        ${group1.length > 0 
+          ? (state.viewMode === 'cards' ? renderCardsGridHtml(group1) : renderTableSectionHtml(group1))
+          : `<div class="p-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+               No se registran Límites Máximos Permisibles (LMP) específicos para este sector bajo los filtros aplicados.
+             </div>`
+        }
+      </section>
+
+      <!-- GRUPO 2: ECA GENERALES RELACIONADOS -->
+      <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="w-3 h-3 rounded-full bg-sky-500 shrink-0"></span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                Grupo 2 · Estándares de Calidad Ambiental (ECA) Generales Relacionados
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-sky-200 dark:bg-sky-900/60 text-sky-800 dark:text-sky-200 border border-sky-300 dark:border-sky-700">
+                ${group2.length} norma${group2.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+              Estándares de calidad ambiental para cuerpos receptores (agua, aire, suelo). No son límites exclusivos de este sector ni regulan la fuente de emisión de forma individual.
+            </p>
+          </div>
+        </div>
+        ${group2.length > 0 
+          ? (state.viewMode === 'cards' ? renderCardsGridHtml(group2) : renderTableSectionHtml(group2))
+          : `<div class="p-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+               No se registran Estándares de Calidad Ambiental (ECA) para los filtros aplicados.
+             </div>`
+        }
+      </section>
+
+      <!-- GRUPO 3: APLICACIÓN CONDICIONADA (VMA) -->
+      <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="w-3 h-3 rounded-full bg-purple-500 shrink-0"></span>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                Grupo 3 · Normativa de Aplicación Condicionada (VMA)
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-200 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-700">
+                ${group3.length} norma${group3.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+              Aplica <strong>únicamente</strong> si las instalaciones realizan descargas de aguas residuales no domésticas (UND) a la red pública de alcantarillado sanitario (D.S. 010-2019-VIVIENDA). No aplica para vertimientos directos a cuerpos de agua naturales.
+            </p>
+          </div>
+        </div>
+        ${group3.length > 0 
+          ? (state.viewMode === 'cards' ? renderCardsGridHtml(group3) : renderTableSectionHtml(group3))
+          : `<div class="p-6 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+               No aplican Valores Máximos Admisibles (VMA) bajo los medios o filtros seleccionados (por ejemplo en medios no hídricos como Aire o Suelo).
+             </div>`
+        }
+      </section>
+    `;
+  }
+
+  function renderCardsGridHtml(items) {
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        ${items.map(item => renderCardItem(item)).join('')}
+      </div>
+    `;
+  }
+
+  function renderCardItem(item) {
+    return `
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 flex flex-col justify-between relative group hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all">
         <div>
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div class="flex items-center gap-2">
+          <!-- Header Badges: Instrument, Medium, Relation & Status -->
+          <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <span class="px-2.5 py-1 rounded-md text-xs font-black tracking-wider ${getInstrumentBgClass(item.instrument)}">
                 ${item.instrument}
               </span>
-              <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+              <span class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded ${getMediumBadgeClass(item.environmental_medium)}">
+                <i data-lucide="${getMediumIcon(item.environmental_medium)}" class="w-3.5 h-3.5"></i>
                 ${item.environmental_medium}
               </span>
+              ${item.sector_relation_type ? getSectorRelationBadgeHtml(item.sector_relation_type, item.sector) : ''}
             </div>
             <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${getStatusBadgeClass(item.status)}">
               <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -558,29 +1225,59 @@ const EcoNorma = (function() {
             </span>
           </div>
 
-          <div class="mb-2">
-            <h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          <!-- Parameter Title, Chemical Formula & CAS -->
+          <div class="mb-3">
+            <h4 class="text-lg font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               ${item.parameter_name}
             </h4>
-            <div class="flex items-center gap-2 mt-0.5">
-              ${item.symbol ? `<span class="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">${item.symbol}</span>` : ''}
+            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+              ${item.symbol ? `<span class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-900">${item.symbol}</span>` : ''}
               ${item.cas_number ? `<span class="text-xs font-mono text-slate-400">CAS: ${item.cas_number}</span>` : ''}
             </div>
           </div>
 
-          <div class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 mb-4 space-y-1 border border-slate-100 dark:border-slate-800">
-            <div class="font-semibold text-slate-800 dark:text-slate-200">
-              <i data-lucide="tag" class="w-3.5 h-3.5 inline-block mr-1 text-emerald-600"></i> ${item.category}
-            </div>
-            ${item.subcategory ? `<div class="text-slate-500 dark:text-slate-400 pl-4 border-l border-emerald-500/30">${item.subcategory}</div>` : ''}
-            ${item.sector ? `<div class="text-[11px] text-slate-400">Sector: ${item.sector}</div>` : ''}
+          <!-- Classification & Regulatory Scope -->
+          <div class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 mb-4 space-y-1.5 border border-slate-100 dark:border-slate-800">
+            ${item.regulated_object ? `
+              <div class="font-bold text-slate-800 dark:text-slate-200 flex items-start gap-1.5">
+                <i data-lucide="target" class="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0"></i>
+                <span><strong>Objeto:</strong> ${item.regulated_object}</span>
+              </div>
+            ` : ''}
+            
+            ${item.category && item.category !== 'General' ? `
+              <div class="font-semibold text-slate-800 dark:text-slate-200 flex items-start gap-1.5">
+                <i data-lucide="tag" class="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0"></i>
+                <span>${item.category}</span>
+              </div>
+            ` : ''}
+
+            ${item.subcategory ? `
+              <div class="text-slate-500 dark:text-slate-400 pl-5 border-l border-emerald-500/30">
+                ${item.subcategory}
+              </div>
+            ` : ''}
+
+            ${item.sector && item.instrument !== 'ECA' ? `
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                <strong>Sector:</strong> ${item.sector} ${item.subsector ? `· ${item.subsector}` : ''}
+              </div>
+            ` : ''}
+
+            ${item.applicability_condition ? `
+              <div class="text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-2 rounded-lg border border-amber-200/60 dark:border-amber-800/40">
+                <i data-lucide="info" class="w-3.5 h-3.5 inline mr-1 text-amber-600"></i>
+                <strong>Condición:</strong> ${item.applicability_condition}
+              </div>
+            ` : ''}
           </div>
 
+          <!-- Regulatory Value Box -->
           <div class="bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-slate-800/80 dark:to-emerald-950/30 rounded-xl p-4 mb-4 border border-emerald-100 dark:border-emerald-900/40">
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-              Valor Regulatorio
+              Valor Normativo Establecido
             </span>
-            <div class="flex items-baseline gap-2">
+            <div class="flex items-baseline gap-2 flex-wrap">
               <span class="text-2xl font-black text-emerald-700 dark:text-emerald-300 font-mono">
                 ${item.value_text || formatParamValue(item)}
               </span>
@@ -588,10 +1285,11 @@ const EcoNorma = (function() {
                 ${item.unit}
               </span>
             </div>
-            ${item.evaluation_period ? `<span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i> ${item.evaluation_period}</span>` : ''}
+            ${item.evaluation_period ? `<span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-1"><i data-lucide="clock" class="w-3 h-3 inline mr-1"></i> Periodo: ${item.evaluation_period}</span>` : ''}
           </div>
 
-          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <!-- Legal Citation Reference -->
+          <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-4 pb-2 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-1">
             <span class="font-semibold text-slate-700 dark:text-slate-300">
               <i data-lucide="file-text" class="w-3.5 h-3.5 inline mr-1 text-slate-400"></i> ${item.norm_code}
             </span>
@@ -599,6 +1297,7 @@ const EcoNorma = (function() {
           </div>
         </div>
 
+        <!-- Action Buttons -->
         <div class="grid grid-cols-2 gap-2 pt-2">
           <button onclick="EcoNorma.openParamDetail(${item.id})" class="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
             <i data-lucide="eye" class="w-3.5 h-3.5"></i> Ficha Técnica
@@ -614,56 +1313,70 @@ const EcoNorma = (function() {
           </button>
         </div>
       </div>
-    `).join('');
+    `;
   }
 
-  function renderTableView() {
-    dom.resultsContainer.className = 'col-span-full';
-    dom.resultsContainer.innerHTML = `
+  function renderTableSectionHtml(items) {
+    return `
       <div class="glass-panel rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         <div class="table-responsive">
-          <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-            <thead class="bg-slate-50 dark:bg-slate-800/80 text-xs uppercase font-bold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+          <table class="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 uppercase font-black text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th class="px-4 py-3.5">Instrumento</th>
-                <th class="px-4 py-3.5">Medio / Sector</th>
-                <th class="px-4 py-3.5">Parámetro</th>
-                <th class="px-4 py-3.5">Categoría / Subcategoría</th>
-                <th class="px-4 py-3.5">Límite Normativo</th>
-                <th class="px-4 py-3.5">Unidad</th>
-                <th class="px-4 py-3.5">Norma Legal</th>
-                <th class="px-4 py-3.5 text-center">Acciones</th>
+                <th class="px-3 py-3">Instrumento</th>
+                <th class="px-3 py-3">Medio / Objeto</th>
+                <th class="px-3 py-3">Sector / Relación</th>
+                <th class="px-3 py-3">Parámetro</th>
+                <th class="px-3 py-3">Categoría / Condición</th>
+                <th class="px-3 py-3">Límite Normativo</th>
+                <th class="px-3 py-3">Unidad</th>
+                <th class="px-3 py-3">Periodo / Ref.</th>
+                <th class="px-3 py-3">Norma Legal</th>
+                <th class="px-3 py-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              ${state.results.map(item => `
+              ${items.map(item => `
                 <tr class="hover:bg-emerald-50/40 dark:hover:bg-slate-800/50 transition-colors">
-                  <td class="px-4 py-3 font-mono font-bold">
+                  <td class="px-3 py-3 font-mono font-bold">
                     <span class="px-2 py-0.5 rounded text-xs ${getInstrumentBgClass(item.instrument)}">${item.instrument}</span>
                   </td>
-                  <td class="px-4 py-3">
-                    <div class="font-semibold text-slate-800 dark:text-slate-200">${item.environmental_medium}</div>
-                    ${item.sector ? `<div class="text-xs text-slate-400">${item.sector}</div>` : ''}
+                  <td class="px-3 py-3">
+                    <div class="inline-flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                      <i data-lucide="${getMediumIcon(item.environmental_medium)}" class="w-3.5 h-3.5 text-emerald-600"></i>
+                      ${item.environmental_medium}
+                    </div>
+                    ${item.regulated_object ? `<div class="text-[11px] text-slate-500 font-medium">${item.regulated_object}</div>` : ''}
                   </td>
-                  <td class="px-4 py-3">
+                  <td class="px-3 py-3">
+                    <div class="font-semibold text-slate-800 dark:text-slate-200">${item.sector || 'General / Receptores'}</div>
+                    ${item.sector_relation_type ? `<div class="mt-0.5">${getSectorRelationBadgeHtml(item.sector_relation_type, '')}</div>` : ''}
+                  </td>
+                  <td class="px-3 py-3">
                     <div class="font-bold text-slate-900 dark:text-white">${item.parameter_name}</div>
-                    ${item.symbol ? `<span class="text-xs font-mono text-emerald-600 dark:text-emerald-400">(${item.symbol})</span>` : ''}
+                    ${item.symbol ? `<span class="font-mono text-emerald-600 dark:text-emerald-400 font-bold">(${item.symbol})</span>` : ''}
+                    ${item.cas_number ? `<span class="text-[10px] text-slate-400 block font-mono">CAS: ${item.cas_number}</span>` : ''}
                   </td>
-                  <td class="px-4 py-3 text-xs max-w-xs">
-                    <div class="font-medium text-slate-800 dark:text-slate-200">${item.category}</div>
-                    ${item.subcategory ? `<div class="text-slate-400">${item.subcategory}</div>` : ''}
+                  <td class="px-3 py-3 max-w-xs">
+                    <div class="font-medium text-slate-800 dark:text-slate-200">${item.category || item.annex || '-'}</div>
+                    ${item.subcategory ? `<div class="text-slate-400 text-[11px]">${item.subcategory}</div>` : ''}
+                    ${item.applicability_condition ? `<div class="text-amber-600 dark:text-amber-400 text-[10px] italic">${item.applicability_condition}</div>` : ''}
                   </td>
-                  <td class="px-4 py-3 font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                  <td class="px-3 py-3 font-mono font-black text-emerald-700 dark:text-emerald-300">
                     ${item.value_text || formatParamValue(item)}
                   </td>
-                  <td class="px-4 py-3 font-mono text-xs text-slate-500">
+                  <td class="px-3 py-3 font-mono text-slate-500 font-bold">
                     ${item.unit}
                   </td>
-                  <td class="px-4 py-3 text-xs">
-                    <div class="font-semibold">${item.norm_code}</div>
+                  <td class="px-3 py-3 text-[11px]">
+                    <div>${item.evaluation_period || '-'}</div>
+                    <div class="text-slate-400">${item.table_ref || item.article_ref || ''}</div>
+                  </td>
+                  <td class="px-3 py-3 text-[11px]">
+                    <div class="font-bold text-slate-800 dark:text-slate-200">${item.norm_code}</div>
                     <div class="text-slate-400">${item.issuing_entity} (${item.year})</div>
                   </td>
-                  <td class="px-4 py-3 text-center">
+                  <td class="px-3 py-3 text-center">
                     <div class="flex items-center justify-center gap-1.5">
                       <button onclick="EcoNorma.openParamDetail(${item.id})" title="Ver ficha técnica" class="p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-lg">
                         <i data-lucide="eye" class="w-4 h-4"></i>
@@ -784,17 +1497,28 @@ const EcoNorma = (function() {
   function renderParamDetailModal(p) {
     if (!dom.detailModal || !dom.detailModalContent) return;
 
+    let relationExplanation = '';
+    if (p.sector_relation_type === 'ESPECIFICA_SECTOR') {
+      relationExplanation = `Límite Máximo Permisible (LMP) aplicable de forma obligatoria y directa a las emisiones gaseosas o efluentes líquidos descargados por las instalaciones del sector <strong>${p.sector || 'regulado'}</strong>.`;
+    } else if (p.sector_relation_type === 'ECA_GENERAL') {
+      relationExplanation = `Estándar de Calidad Ambiental (ECA) de referencia para el cuerpo receptor natural (${p.environmental_medium}). <strong>No es un límite exclusivo del sector</strong> ni regula la fuente de emisión de forma individual.`;
+    } else if (p.sector_relation_type === 'APLICACION_CONDICIONADA') {
+      relationExplanation = `Valor Máximo Admisible (VMA) bajo el D.S. 010-2019-VIVIENDA. <strong>Aplica exclusivamente si el establecimiento realiza descargas de aguas residuales no domésticas (UND) a la red de alcantarillado sanitario público</strong>. No aplica para vertimientos a cuerpos naturales.`;
+    }
+
     dom.detailModalContent.innerHTML = `
       <div class="space-y-6">
+        <!-- Header -->
         <div class="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div>
-            <div class="flex items-center gap-2 mb-1.5">
+            <div class="flex items-center gap-2 mb-1.5 flex-wrap">
               <span class="px-2.5 py-1 rounded-md text-xs font-black tracking-wider ${getInstrumentBgClass(p.instrument)}">
                 ${p.instrument}
               </span>
               <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                 ${p.environmental_medium}
               </span>
+              ${p.sector_relation_type ? getSectorRelationBadgeHtml(p.sector_relation_type, p.sector) : ''}
               <span class="text-xs font-bold px-2 py-0.5 rounded-full ${getStatusBadgeClass(p.status)}">
                 ${p.status}
               </span>
@@ -809,6 +1533,7 @@ const EcoNorma = (function() {
           </button>
         </div>
 
+        <!-- Regulatory Value Banner -->
         <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-sky-500/10 border border-emerald-500/30 dark:border-emerald-500/20 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Valor Normativo Establecido</span>
@@ -828,15 +1553,29 @@ const EcoNorma = (function() {
           </div>
         </div>
 
+        <!-- Sector Relationship & Legal Nature -->
+        ${relationExplanation ? `
+          <div class="space-y-2">
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="network" class="w-4 h-4 text-amber-600"></i> Relación Sectorial y Ámbito Normativo
+            </h4>
+            <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              ${relationExplanation}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Where it applies -->
         <div class="space-y-2">
           <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i> ¿Dónde aplica este estándar?
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i> ¿Dónde y cómo aplica este estándar?
           </h4>
-          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            <p class="font-semibold text-slate-800 dark:text-slate-200 mb-1">${p.category}</p>
-            ${p.subcategory ? `<p class="text-slate-600 dark:text-slate-400 mb-1.5">${p.subcategory}</p>` : ''}
-            ${p.sector ? `<p class="text-slate-500"><strong>Sector regulado:</strong> ${p.sector} ${p.subsector ? `(${p.subsector})` : ''}</p>` : ''}
-            ${p.activity ? `<p class="text-slate-500"><strong>Actividad:</strong> ${p.activity}</p>` : ''}
+          <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
+            ${p.regulated_object ? `<p><strong>Objeto regulado:</strong> ${p.regulated_object}</p>` : ''}
+            ${p.category ? `<p><strong>Categoría / Anexo:</strong> ${p.category} ${p.subcategory ? `· ${p.subcategory}` : ''}</p>` : ''}
+            ${p.sector ? `<p><strong>Sector regulado:</strong> ${p.sector} ${p.subsector ? `(${p.subsector})` : ''}</p>` : ''}
+            ${p.activity ? `<p><strong>Actividad / Proceso:</strong> ${p.activity}</p>` : ''}
+            ${p.applicability_condition ? `<p class="text-amber-700 dark:text-amber-400 font-semibold"><strong>Condición de aplicación:</strong> ${p.applicability_condition}</p>` : ''}
           </div>
         </div>
 
@@ -2145,13 +2884,18 @@ const EcoNorma = (function() {
   function exportFilteredCsv() {
     const params = new URLSearchParams();
     if (state.query) params.set('q', state.query);
+    if (state.mode) params.set('mode', state.mode);
     if (state.instrument !== 'TODOS') params.set('instrument', state.instrument);
     if (state.medium !== 'TODOS') params.set('medium', state.medium);
     if (state.sector !== 'TODOS') params.set('sector', state.sector);
+    if (state.regulatedObject !== 'TODOS') params.set('regulated_object', state.regulatedObject);
+    if (state.sectorRelationType !== 'TODOS') params.set('sector_relation_type', state.sectorRelationType);
     if (state.category !== 'TODOS') params.set('category', state.category);
+    if (state.evaluationPeriod !== 'TODOS') params.set('evaluation_period', state.evaluationPeriod);
+    if (state.annex !== 'TODOS') params.set('annex', state.annex);
 
     window.location.href = `/api/parameters/export/csv?${params.toString()}`;
-    showToast('Generando descarga de archivo CSV...', 'info');
+    showToast('Generando descarga de archivo CSV con todos los campos normativos...', 'info');
   }
 
   function shareCurrentQuery() {
@@ -2163,13 +2907,24 @@ const EcoNorma = (function() {
     });
   }
 
+  function shareSearchQuery() {
+    shareCurrentQuery();
+  }
+
   function removeFilter(key) {
-    if (key === 'q') state.query = '';
+    if (key === 'mode') setSearchMode('parameter', false);
+    else if (key === 'q') state.query = '';
     else if (key === 'instrument') state.instrument = 'TODOS';
     else if (key === 'medium') state.medium = 'TODOS';
     else if (key === 'sector') state.sector = 'TODOS';
+    else if (key === 'regulatedObject') state.regulatedObject = 'TODOS';
+    else if (key === 'sectorRelationType') state.sectorRelationType = 'TODOS';
     else if (key === 'category') state.category = 'TODOS';
+    else if (key === 'subcategory') state.subcategory = 'TODOS';
+    else if (key === 'evaluationPeriod') state.evaluationPeriod = 'TODOS';
+    else if (key === 'annex') state.annex = 'TODOS';
     else if (key === 'status') state.status = 'TODOS';
+    else if (key === 'entity') state.entity = 'TODOS';
 
     syncFiltersToUI();
     state.page = 1;
@@ -2178,19 +2933,40 @@ const EcoNorma = (function() {
 
   function resetAllFilters() {
     state.query = '';
+    state.mode = 'parameter';
     state.instrument = 'TODOS';
     state.medium = 'TODOS';
     state.sector = 'TODOS';
+    state.regulatedObject = 'TODOS';
+    state.sectorRelationType = 'TODOS';
     state.category = 'TODOS';
     state.subcategory = 'TODOS';
+    state.evaluationPeriod = 'TODOS';
+    state.annex = 'TODOS';
+    state.instrumentModeTab = 'ECA';
+    state.ecaMedium = 'Agua';
     state.status = 'TODOS';
     state.normCode = 'TODOS';
     state.entity = 'TODOS';
     state.year = '';
     state.page = 1;
 
+    setSearchMode('parameter', false);
     syncFiltersToUI();
     executeSearch();
+  }
+
+  function setViewMode(mode) {
+    state.viewMode = mode;
+    if (dom.viewCardsBtn && dom.viewTableBtn) {
+      dom.viewCardsBtn.classList.toggle('bg-white', mode === 'cards');
+      dom.viewCardsBtn.classList.toggle('dark:bg-slate-700', mode === 'cards');
+      dom.viewCardsBtn.classList.toggle('shadow-sm', mode === 'cards');
+      dom.viewTableBtn.classList.toggle('bg-white', mode === 'table');
+      dom.viewTableBtn.classList.toggle('dark:bg-slate-700', mode === 'table');
+      dom.viewTableBtn.classList.toggle('shadow-sm', mode === 'table');
+    }
+    renderResults();
   }
 
   async function parseErrorResponse(res) {
@@ -2348,7 +3124,8 @@ const EcoNorma = (function() {
     if (adminImportForm) adminImportForm.addEventListener('submit', submitImportFile);
 
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('#mainSearchInput') && !e.target.closest('#autocompleteDropdown')) {
+      if (!e.target.closest('#mainSearchInput') && !e.target.closest('#autocompleteDropdown') &&
+          !e.target.closest('#filterSearchInput') && !e.target.closest('#filterAutocompleteDropdown')) {
         hideAutocomplete();
       }
     });
@@ -2361,6 +3138,15 @@ const EcoNorma = (function() {
     closeDetailModal,
     openComparatorWithParam,
     copyParamReference,
+    setInstrumentFilter,
+    setMediumFilter,
+    toggleAdvancedFilters,
+    onFilterSelectChange,
+    clearSearchInput,
+    onSearchKeyDown,
+    exportFilteredCsv,
+    shareSearchQuery,
+    setViewMode,
     removeFilter,
     resetAllFilters,
     changePage,
@@ -2393,7 +3179,21 @@ const EcoNorma = (function() {
     filterParamsByNorm,
     loadAdminAuditLogs,
     loadAdminPendingVerification,
-    onSearchInput
+    onSearchInput,
+    setSearchMode,
+    setInstrumentModeTab,
+    setEcaMedium,
+    onEcaCategoryChange,
+    onEcaSubcategoryChange,
+    onEcaAirPeriodChange,
+    onEcaSoilUseChange,
+    onEcaNoiseZoneChange,
+    onLmpSectorChange,
+    onLmpMediumChange,
+    onVmaAnnexChange,
+    setSectorModeSector,
+    onSectorSecondaryFilterChange,
+    onSubSearchInput
   };
 })();
 
