@@ -17,11 +17,16 @@ router = APIRouter(prefix="/api/parameters", tags=["Parámetros"])
 @router.get("/search")
 def search_params(
     q: Optional[str] = Query(None, description="Término de búsqueda (ej. Arsénico, DBO5, PM2.5, pH)"),
+    mode: Optional[str] = Query(None, description="'parameter', 'instrument', 'sector'"),
     instrument: Optional[str] = Query(None, description="ECA / LMP / VMA"),
     medium: Optional[str] = Query(None, description="Agua, Aire, Suelo, Ruido, etc."),
     sector: Optional[str] = Query(None, description="Minería, Hidrocarburos, Pesquería, etc."),
+    regulated_object: Optional[str] = Query(None, description="Objeto regulado"),
+    sector_relation_type: Optional[str] = Query(None, description="ESPECIFICA_SECTOR / ECA_GENERAL / APLICACION_CONDICIONADA"),
     category: Optional[str] = Query(None, description="Categoría normativa"),
     subcategory: Optional[str] = Query(None, description="Subcategoría específica"),
+    evaluation_period: Optional[str] = Query(None, description="Periodo de evaluación"),
+    annex: Optional[str] = Query(None, description="Anexo normativo"),
     status: Optional[str] = Query(None, description="VIGENTE / MODIFICADO / DEROGADO"),
     verification_status: Optional[str] = Query(None),
     norm_code: Optional[str] = Query(None, description="Código de la norma"),
@@ -32,11 +37,16 @@ def search_params(
 ):
     results, total = search_parameters(
         query=q,
+        mode=mode,
         instrument=instrument,
         environmental_medium=medium,
         sector=sector,
+        regulated_object=regulated_object,
+        sector_relation_type=sector_relation_type,
         category=category,
         subcategory=subcategory,
+        evaluation_period=evaluation_period,
+        annex=annex,
         status=status,
         verification_status=verification_status,
         norm_code=norm_code,
@@ -74,17 +84,27 @@ def compare_categories(param_name: str = Query(..., description="Nombre del par�
 @router.get("/export/csv")
 def export_csv(
     q: Optional[str] = None,
+    mode: Optional[str] = None,
     instrument: Optional[str] = None,
     medium: Optional[str] = None,
     sector: Optional[str] = None,
-    category: Optional[str] = None
+    regulated_object: Optional[str] = None,
+    sector_relation_type: Optional[str] = None,
+    category: Optional[str] = None,
+    evaluation_period: Optional[str] = None,
+    annex: Optional[str] = None
 ):
     results, _ = search_parameters(
         query=q,
+        mode=mode,
         instrument=instrument,
         environmental_medium=medium,
         sector=sector,
+        regulated_object=regulated_object,
+        sector_relation_type=sector_relation_type,
         category=category,
+        evaluation_period=evaluation_period,
+        annex=annex,
         page=1,
         page_size=10000,
         is_admin=False
@@ -94,9 +114,9 @@ def export_csv(
     writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
     
     headers = [
-        "ID", "Instrumento", "Medio Ambiental", "Sector", "Subsector", "Categoría",
-        "Subcategoría", "Parámetro", "Símbolo", "CAS", "Tipo Límite", "Valor Mínimo", "Valor Máximo",
-        "Valor Texto", "Unidad", "Periodo", "Condición Especial", "Método", "Observaciones",
+        "ID", "Instrumento", "Medio Ambiental", "Objeto Regulado", "Sector", "Subsector", "Tipo Relación Sectorial",
+        "Categoría", "Subcategoría", "Parámetro", "Símbolo", "CAS", "Tipo Límite", "Valor Mínimo", "Valor Máximo",
+        "Valor Texto", "Unidad", "Periodo", "Condición Especial", "Condición de Aplicabilidad", "Método", "Observaciones",
         "Código Norma", "Nombre Norma", "Año", "Anexo", "Tabla", "Entidad Emisora",
         "Estado", "Estado Verificación", "URL Oficial"
     ]
@@ -104,13 +124,14 @@ def export_csv(
     
     for r in results:
         writer.writerow([
-            r["id"], r["instrument"], r["environmental_medium"], r.get("sector") or "", r.get("subsector") or "",
-            r["category"], r.get("subcategory") or "", r["parameter_name"], r.get("symbol") or "", r.get("cas_number") or "",
+            r["id"], r["instrument"], r["environmental_medium"], r.get("regulated_object") or "",
+            r.get("sector") or "", r.get("subsector") or "", r.get("sector_relation_type") or "",
+            r.get("category") or "", r.get("subcategory") or "", r["parameter_name"], r.get("symbol") or "", r.get("cas_number") or "",
             r.get("limit_type") or "",
             r["min_value"] if r.get("min_value") is not None else "",
             r["max_value"] if r.get("max_value") is not None else "",
             r.get("value_text") or "", r["unit"], r.get("evaluation_period") or "",
-            r.get("special_condition") or "",
+            r.get("special_condition") or "", r.get("applicability_condition") or "",
             r.get("method_criteria") or "", r.get("observations") or "",
             r["norm_code"], r.get("norm_name") or "", r.get("year") or "", r.get("annex") or "", r.get("table_ref") or "",
             r.get("issuing_entity") or "", r.get("status") or "", r.get("verification_status") or "",
