@@ -87,14 +87,14 @@
           <a href="#inicio" data-tab="inicio" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
             Inicio
           </a>
-          <a href="#eca" data-tab="eca" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-            ECA
+          <a href="#busqueda" data-tab="busqueda" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5">
+            <i data-lucide="search" class="w-4 h-4 text-emerald-600"></i> Parámetro
           </a>
-          <a href="#lmp" data-tab="lmp" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-            LMP
+          <a href="#instrumento" data-tab="instrumento" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-4 h-4 text-sky-600"></i> Instrumento
           </a>
-          <a href="#vma" data-tab="vma" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
-            VMA
+          <a href="#sector" data-tab="sector" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5">
+            <i data-lucide="factory" class="w-4 h-4 text-amber-600"></i> Sector
           </a>
           <a href="#comparador" data-tab="comparador" class="nav-link px-3.5 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center gap-1.5">
             <i data-lucide="scale" class="w-4 h-4 text-hydro-600"></i> Comparador
@@ -132,9 +132,9 @@
     <!-- Mobile Navigation Drawer -->
     <div id="mobileMenu" class="hidden lg:hidden border-t border-slate-200 dark:border-slate-800 px-4 pt-3 pb-6 space-y-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
       <a href="#inicio" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="inicio">Inicio</a>
-      <a href="#eca" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="eca">ECA (Agua, Aire, Suelo, Ruido)</a>
-      <a href="#lmp" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="lmp">LMP (Minería, Hidrocarburos, etc.)</a>
-      <a href="#vma" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="vma">VMA (Alcantarillado Sanitario)</a>
+      <a href="#busqueda" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-emerald-600" data-tab="busqueda">Buscar por Parámetro</a>
+      <a href="#instrumento" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-sky-600" data-tab="instrumento">Explorar por Instrumento (ECA, LMP, VMA)</a>
+      <a href="#sector" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-amber-600" data-tab="sector">Explorar por Sector Productivo</a>
       <a href="#comparador" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold text-hydro-600" data-tab="comparador">Comparador de Laboratorio</a>
       <a href="#normas" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="normas">Biblioteca Normativa</a>
       <a href="#fuentes" class="nav-link block px-3 py-2 rounded-lg text-base font-semibold" data-tab="fuentes">Fuentes y Metodología</a>
@@ -270,7 +270,7 @@
               </div>
             </div>
             <div class="pt-6">
-              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'ECA' })" class="w-full py-3 bg-hydro-600 hover:bg-hydro-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+              <button onclick="EcoNorma.navigateTo('busqueda', { mode: 'instrument', instrument: 'ECA' })" class="w-full py-3 bg-hydro-600 hover:bg-hydro-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
                 Consultar ECA <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -297,7 +297,7 @@
               </div>
             </div>
             <div class="pt-6">
-              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'LMP' })" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+              <button onclick="EcoNorma.navigateTo('busqueda', { mode: 'instrument', instrument: 'LMP' })" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
                 Consultar LMP <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -322,11 +322,249 @@
               </div>
             </div>
             <div class="pt-6">
-              <button onclick="EcoNorma.navigateTo('busqueda', { instrument: 'VMA' })" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
+              <button onclick="EcoNorma.navigateTo('busqueda', { mode: 'instrument', instrument: 'VMA' })" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2">
                 Consultar VMA <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
           </div>
+
+        </div>
+      </div>
+
+      <!-- C. Explorar por Sector Productivo -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 mb-2 border border-amber-200 dark:border-amber-800">
+            <i data-lucide="factory" class="w-3.5 h-3.5"></i> ENFOQUE SECTORIAL Y ACTIVIDADES PRODUCTIVAS
+          </div>
+          <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Explora la Normativa por Sector Productivo
+          </h2>
+          <p class="text-slate-600 dark:text-slate-400 mt-2 text-sm sm:text-base font-medium">
+            Acceso directo al catálogo ordenado según tu actividad económica: LMP específicos del sector, ECA generales del medio receptor y referencias de VMA.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Minería y Metalurgia -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Minería y Metalurgia' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-amber-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+                <i data-lucide="pickaxe" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">Minería y Metalurgia</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes mineros (D.S. 010-2010-MINAM) y emisiones gaseosas.</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-amber-600 dark:text-amber-400">
+              <span>14 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Hidrocarburos -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Hidrocarburos' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-blue-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold">
+                <i data-lucide="flame" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Hidrocarburos</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes líquidos en upstream y downstream (D.S. 037-2008-PCM).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-600 dark:text-blue-400">
+              <span>10 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Electricidad -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Electricidad' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-yellow-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300 flex items-center justify-center font-bold">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">Electricidad</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes termoeléctricos y descargas térmicas (R.D. 008-97-EM/DGAA).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-yellow-600 dark:text-yellow-400">
+              <span>3 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Pesquería y Acuicultura -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Pesquería' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-cyan-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 flex items-center justify-center font-bold">
+                <i data-lucide="fish" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">Pesca y Acuicultura</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes de harina y aceite de pescado (D.S. 010-2008-PRODUCE).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-cyan-600 dark:text-cyan-400">
+              <span>4 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Industria Manufacturera -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Industria Manufacturera' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-teal-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold">
+                <i data-lucide="cog" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Industria Manufacturera</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes industriales manufactureros (D.S. 003-2002-PRODUCE).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-teal-600 dark:text-teal-400">
+              <span>8 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Cemento y Construcción -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Cemento y Construcción' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-slate-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold">
+                <i data-lucide="building-2" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">Cemento y Construcción</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Emisiones en hornos de cemento y cal (D.S. 001-2020-PRODUCE).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+              <span>3 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Saneamiento / PTAR -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Saneamiento / PTAR' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-sky-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold">
+                <i data-lucide="pipette" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">Saneamiento (PTAR)</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Efluentes de PTAR domésticas y municipales (D.S. 003-2010-MINAM).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-sky-600 dark:text-sky-400">
+              <span>7 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+
+          <!-- Transporte -->
+          <div onclick="EcoNorma.navigateTo('busqueda', { mode: 'sector', sector: 'Transporte' })" class="sector-card glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-500/50 flex flex-col justify-between group">
+            <div class="space-y-2">
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold">
+                <i data-lucide="truck" class="w-5 h-5"></i>
+              </div>
+              <h3 class="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Transporte</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Emisiones vehiculares en fuentes móviles (D.S. 009-2012-MINAM).</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <span>3 LMP específicos</span>
+              <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 Environmental Media Cards Row on Home -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-8">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Explora por Medio Ambiental
+          </h2>
+          <p class="text-slate-600 dark:text-slate-400 mt-2 text-xs sm:text-sm font-medium">
+            Acceso directo a todos los estándares clasificados según el medio físico y receptor.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          
+          <!-- Agua -->
+          <button onclick="EcoNorma.navigateTo('busqueda', { medium: 'Agua' })" class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-sky-500/50 text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <i data-lucide="droplets" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">Agua</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Cuerpos de agua, efluentes y alcantarillado.
+              </p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-sky-600 dark:text-sky-400 flex items-center justify-between">
+              <span>149 parámetros</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
+
+          <!-- Aire -->
+          <button onclick="EcoNorma.navigateTo('busqueda', { medium: 'Aire' })" class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-teal-500/50 text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <i data-lucide="wind" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Aire</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Calidad de aire y emisiones industriales/vehiculares.
+              </p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-teal-600 dark:text-teal-400 flex items-center justify-between">
+              <span>27 parámetros</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
+
+          <!-- Suelo -->
+          <button onclick="EcoNorma.navigateTo('busqueda', { medium: 'Suelo' })" class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-emerald-500/50 text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <i data-lucide="mountain" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Suelo</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Suelo agrícola, residencial y comercial/industrial.
+              </p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
+              <span>57 parámetros</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
+
+          <!-- Ruido -->
+          <button onclick="EcoNorma.navigateTo('busqueda', { medium: 'Ruido' })" class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-orange-500/50 text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <i data-lucide="volume-2" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Ruido</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Zonas residenciales, comerciales e industriales en dBA.
+              </p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-orange-600 dark:text-orange-400 flex items-center justify-between">
+              <span>8 parámetros</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
+
+          <!-- Radiación no ionizante -->
+          <button onclick="EcoNorma.navigateTo('busqueda', { medium: 'Radiación no ionizante' })" class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800 hover:border-indigo-500/50 text-left transition-all group flex flex-col justify-between col-span-2 sm:col-span-1">
+            <div>
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <i data-lucide="radio" class="w-5 h-5"></i>
+              </div>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Radiación RNI</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Campos electromagnéticos y densidad de potencia.
+              </p>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center justify-between">
+              <span>4 parámetros</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          </button>
 
         </div>
       </div>
@@ -338,97 +576,549 @@
     <!-- ============================================================= -->
     <section id="view-busqueda" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       
-      <!-- Search & Filters Header Box -->
-      <div class="glass-panel rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <!-- Search & Filters Header Box with 3 Architecture Modes -->
+      <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
         
-        <!-- Search Omnibox on Filter View -->
-        <div class="flex flex-col sm:flex-row gap-3">
-          <div class="relative flex-grow">
-            <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <input 
-              type="text" 
-              id="filterSearchInput"
-              oninput="EcoNorma.onSearchInput(event)"
-              placeholder="Buscar por parámetro (ej. Arsénico, DBO5, Plomo, pH)..."
-              class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-white"
-            >
+        <!-- Header with Title and Global Actions -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+          <div>
+            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <i data-lucide="layers" class="w-7 h-7 text-emerald-600"></i>
+              Explorador de Normativa Ambiental del Perú
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Consulta sistematizada de ECA, LMP y VMA con exactitud normativa, trazabilidad y rigor jurídico.
+            </p>
           </div>
-          <div class="flex items-center gap-2">
-            <button id="resetFiltersBtn" class="px-4 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="resetFiltersBtn" onclick="EcoNorma.resetAllFilters()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
               <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Restablecer
             </button>
-            <button id="exportCsvBtn" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+            <button id="exportCsvBtn" onclick="EcoNorma.exportFilteredCsv()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
               <i data-lucide="download" class="w-3.5 h-3.5"></i> Exportar CSV
             </button>
-            <button id="shareQueryBtn" class="px-3.5 py-3 bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 hover:bg-sky-100 rounded-xl text-xs font-bold border border-sky-200 dark:border-sky-800 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+            <button id="shareQueryBtn" onclick="EcoNorma.shareSearchQuery()" class="px-3.5 py-2 bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 hover:bg-sky-100 rounded-xl text-xs font-bold border border-sky-200 dark:border-sky-800 transition-all flex items-center gap-1.5">
               <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Compartir
             </button>
           </div>
         </div>
 
-        <!-- Filter Dropdown Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Instrumento</label>
-            <select id="filterInstrument" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todos (ECA / LMP / VMA)</option>
-              <option value="ECA">ECA</option>
-              <option value="LMP">LMP</option>
-              <option value="VMA">VMA</option>
-            </select>
+        <!-- 3 Architecture Modes Selection Tabs -->
+        <div>
+          <label class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block mb-2">
+            Selecciona la modalidad de consulta normativa:
+          </label>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- Mode A Button -->
+            <button type="button" id="modeBtnParameter" onclick="EcoNorma.setSearchMode('parameter')" class="mode-tab active p-4 rounded-2xl border text-left flex items-start gap-3 transition-all" data-mode="parameter">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold shrink-0">
+                <i data-lucide="search" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                  A. Buscar por Parámetro
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  Buscador global por nombre, fórmula química (As, Pb, DBO5, PM2.5, pH), N° CAS o sinónimos.
+                </div>
+              </div>
+            </button>
+
+            <!-- Mode B Button -->
+            <button type="button" id="modeBtnInstrument" onclick="EcoNorma.setSearchMode('instrument')" class="mode-tab p-4 rounded-2xl border text-left flex items-start gap-3 transition-all" data-mode="instrument">
+              <div class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold shrink-0">
+                <i data-lucide="book-open" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                  B. Explorar por Instrumento
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  Navegación contextual adaptada a ECA (por medio físico), LMP (por sector y fuente) o VMA (alcantarillado).
+                </div>
+              </div>
+            </button>
+
+            <!-- Mode C Button -->
+            <button type="button" id="modeBtnSector" onclick="EcoNorma.setSearchMode('sector')" class="mode-tab p-4 rounded-2xl border text-left flex items-start gap-3 transition-all" data-mode="sector">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold shrink-0">
+                <i data-lucide="factory" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                  C. Explorar por Sector
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  Estructuración en 3 grupos: 1. LMP del sector, 2. ECA receptor general, y 3. VMA condicionado.
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PANEL MODO A: BUSCAR POR PARÁMETRO -->
+        <!-- ========================================================= -->
+        <div id="modePanelParameter" class="space-y-5">
+          <!-- Omnibox Search Input -->
+          <div class="relative">
+            <div class="relative flex items-center">
+              <i data-lucide="search" class="w-5 h-5 absolute left-4 pointer-events-none text-slate-400"></i>
+              <input 
+                type="text" 
+                id="filterSearchInput"
+                oninput="EcoNorma.onSearchInput(event)"
+                onkeydown="EcoNorma.onSearchKeyDown(event)"
+                placeholder="Buscar parámetro químico, físico o biológico (ej. Arsénico, DBO5, Plomo, pH, PM2.5, Mercurio, Ruido)..."
+                class="w-full pl-12 pr-10 py-3.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-semibold focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 text-slate-900 dark:text-white transition-all shadow-inner"
+              >
+              <button id="clearFilterSearchBtn" onclick="EcoNorma.clearSearchInput()" class="hidden absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <!-- Autocomplete Dropdown in Search View -->
+            <div id="filterAutocompleteDropdown" class="hidden absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-50 max-h-72 overflow-y-auto"></div>
           </div>
 
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Medio Ambiental</label>
-            <select id="filterMedium" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todos los medios</option>
-            </select>
+          <!-- Quick Chips -->
+          <div class="flex flex-wrap items-center gap-1.5 text-xs">
+            <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">Consultas frecuentes:</span>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="Arsénico">Arsénico</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="Plomo">Plomo</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="Mercurio">Mercurio</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="DBO5">DBO5</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="PM2.5">PM2.5</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="pH">pH</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="Cadmio">Cadmio</button>
+            <button class="quick-chip px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-slate-700 dark:text-slate-300 font-medium transition-all" data-search="Ruido">Ruido</button>
           </div>
 
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Sector</label>
-            <select id="filterSector" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todos los sectores</option>
-            </select>
+          <!-- Quick Selector: INSTRUMENTO -->
+          <div class="space-y-2">
+            <label class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-600"></i> Instrumento Regulatorio
+            </label>
+            <div class="flex flex-wrap gap-2" id="instrumentPillsContainer">
+              <button type="button" onclick="EcoNorma.setInstrumentFilter('TODOS')" class="inst-pill active px-4 py-2 rounded-xl text-xs font-bold border transition-all" data-inst="TODOS">
+                Todos (ECA / LMP / VMA)
+              </button>
+              <button type="button" onclick="EcoNorma.setInstrumentFilter('ECA')" class="inst-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all" data-inst="ECA">
+                ECA · Calidad en Cuerpos Receptores
+              </button>
+              <button type="button" onclick="EcoNorma.setInstrumentFilter('LMP')" class="inst-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all" data-inst="LMP">
+                LMP · Emisiones y Efluentes en Fuente
+              </button>
+              <button type="button" onclick="EcoNorma.setInstrumentFilter('VMA')" class="inst-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all" data-inst="VMA">
+                VMA · Descarga al Alcantarillado
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Categoría</label>
-            <select id="filterCategory" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todas las categorías</option>
-            </select>
+          <!-- Quick Selector: MEDIO AMBIENTAL -->
+          <div class="space-y-2">
+            <label class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5 text-emerald-600"></i> Medio Ambiental
+            </label>
+            <div class="flex flex-wrap gap-2" id="mediumPillsContainer">
+              <button type="button" onclick="EcoNorma.setMediumFilter('TODOS')" class="medium-pill active px-3.5 py-2 rounded-xl text-xs font-bold border transition-all" data-med="TODOS">
+                Todos los medios
+              </button>
+              <button type="button" onclick="EcoNorma.setMediumFilter('Agua')" class="medium-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-med="Agua">
+                <i data-lucide="droplets" class="w-3.5 h-3.5 text-sky-500"></i> Agua
+              </button>
+              <button type="button" onclick="EcoNorma.setMediumFilter('Aire')" class="medium-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-med="Aire">
+                <i data-lucide="wind" class="w-3.5 h-3.5 text-teal-500"></i> Aire
+              </button>
+              <button type="button" onclick="EcoNorma.setMediumFilter('Suelo')" class="medium-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-med="Suelo">
+                <i data-lucide="mountain" class="w-3.5 h-3.5 text-emerald-600"></i> Suelo
+              </button>
+              <button type="button" onclick="EcoNorma.setMediumFilter('Ruido')" class="medium-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-med="Ruido">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-500"></i> Ruido
+              </button>
+              <button type="button" onclick="EcoNorma.setMediumFilter('Radiación no ionizante')" class="medium-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-med="Radiación no ionizante">
+                <i data-lucide="radio" class="w-3.5 h-3.5 text-indigo-500"></i> Radiación RNI
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Entidad</label>
-            <select id="filterEntity" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todas las entidades</option>
-            </select>
+          <!-- Advanced Secondary Filters Toggle -->
+          <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button type="button" onclick="EcoNorma.toggleAdvancedFilters()" id="toggleAdvancedFiltersBtn" class="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 py-1 transition-colors">
+              <i data-lucide="sliders-horizontal" class="w-4 h-4 text-emerald-600"></i>
+              <span>Filtros Específicos (Sector, Categoría, Entidad, Estado)</span>
+              <span id="advancedFiltersBadge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">0</span>
+              <i data-lucide="chevron-down" id="advancedFiltersChevron" class="w-4 h-4 transition-transform duration-200"></i>
+            </button>
+
+            <div id="advancedFiltersContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 text-xs">
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Sector Económico</label>
+                <select id="filterSector" onchange="EcoNorma.onFilterSelectChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos los sectores</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Categoría Normativa</label>
+                <select id="filterCategory" onchange="EcoNorma.onFilterSelectChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todas las categorías</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Entidad Emisora</label>
+                <select id="filterEntity" onchange="EcoNorma.onFilterSelectChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todas las entidades</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Estado Legal</label>
+                <select id="filterStatus" onchange="EcoNorma.onFilterSelectChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos los estados</option>
+                  <option value="VIGENTE">Vigente</option>
+                  <option value="MODIFICADO">Modificado</option>
+                  <option value="DEROGADO">Derogado</option>
+                  <option value="PENDIENTE DE VERIFICACIÓN">Pendiente</option>
+                </select>
+              </div>
+
+              <select id="filterInstrument" class="hidden"><option value="TODOS">TODOS</option></select>
+              <select id="filterMedium" class="hidden"><option value="TODOS">TODOS</option></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PANEL MODO B: EXPLORAR POR INSTRUMENTO -->
+        <!-- ========================================================= -->
+        <div id="modePanelInstrument" class="hidden space-y-6">
+          <!-- Instrument Sub-Tabs -->
+          <div class="flex flex-wrap gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <button type="button" id="instTabEca" onclick="EcoNorma.setInstrumentModeTab('ECA')" class="inst-mode-tab active px-5 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2" data-inst="ECA">
+              <span class="w-2 h-2 rounded-full bg-hydro-500"></span>
+              ECA · Estándares de Calidad Ambiental
+            </button>
+            <button type="button" id="instTabLmp" onclick="EcoNorma.setInstrumentModeTab('LMP')" class="inst-mode-tab px-5 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2" data-inst="LMP">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              LMP · Límites Máximos Permisibles
+            </button>
+            <button type="button" id="instTabVma" onclick="EcoNorma.setInstrumentModeTab('VMA')" class="inst-mode-tab px-5 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-2" data-inst="VMA">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              VMA · Valores Máximos Admisibles
+            </button>
           </div>
 
-          <div>
-            <label class="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">Estado</label>
-            <select id="filterStatus" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-800 dark:text-slate-200">
-              <option value="TODOS">Todos los estados</option>
-              <option value="VIGENTE">Vigente</option>
-              <option value="MODIFICADO">Modificado</option>
-              <option value="DEROGADO">Derogado</option>
-              <option value="PENDIENTE DE VERIFICACIÓN">Pendiente</option>
-            </select>
+          <!-- B.1 Sub-panel: ECA -->
+          <div id="instSubpanelEca" class="space-y-5">
+            <div class="bg-hydro-50/60 dark:bg-hydro-950/30 border border-hydro-200/80 dark:border-hydro-800/40 rounded-2xl p-4 text-xs text-hydro-900 dark:text-hydro-200 flex items-start gap-3">
+              <i data-lucide="info" class="w-5 h-5 text-hydro-600 dark:text-hydro-400 shrink-0 mt-0.5"></i>
+              <div>
+                <strong>ECA (Cuerpos Receptores):</strong> Selecciona el medio físico ambiental para acceder a sus filtros pertinentes. 
+                Los estándares de agua se organizan en Categorías 1-4, mientras que aire se clasifica por periodos de evaluación (24h, 1h, Anual) sin categorías de agua.
+              </div>
+            </div>
+
+            <!-- ECA Medium Selector -->
+            <div class="space-y-2">
+              <label class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                1. Selecciona el Medio Ambiental:
+              </label>
+              <div class="flex flex-wrap gap-2" id="ecaMediumPillsContainer">
+                <button type="button" onclick="EcoNorma.setEcaMedium('Agua')" class="eca-med-pill active px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-eca-med="Agua">
+                  <i data-lucide="droplets" class="w-4 h-4 text-sky-500"></i> Agua
+                </button>
+                <button type="button" onclick="EcoNorma.setEcaMedium('Aire')" class="eca-med-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-eca-med="Aire">
+                  <i data-lucide="wind" class="w-4 h-4 text-teal-500"></i> Aire
+                </button>
+                <button type="button" onclick="EcoNorma.setEcaMedium('Suelo')" class="eca-med-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-eca-med="Suelo">
+                  <i data-lucide="mountain" class="w-4 h-4 text-emerald-600"></i> Suelo
+                </button>
+                <button type="button" onclick="EcoNorma.setEcaMedium('Ruido')" class="eca-med-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-eca-med="Ruido">
+                  <i data-lucide="volume-2" class="w-4 h-4 text-amber-500"></i> Ruido
+                </button>
+                <button type="button" onclick="EcoNorma.setEcaMedium('Radiación no ionizante')" class="eca-med-pill px-4 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-eca-med="Radiación no ionizante">
+                  <i data-lucide="radio" class="w-4 h-4 text-indigo-500"></i> Radiación RNI
+                </button>
+              </div>
+            </div>
+
+            <!-- ECA Contextual Filters Container -->
+            <div id="ecaContextualFilters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+              <!-- Controls dynamically toggled according to selected medium -->
+              <div id="ecaWaterControls" class="contents">
+                <div>
+                  <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Categoría ECA Agua (D.S. 004-2017-MINAM)</label>
+                  <select id="ecaCategorySelect" onchange="EcoNorma.onEcaCategoryChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                    <option value="TODOS">Todas las categorías (predeterminado)</option>
+                    <option value="Categoría 1">Categoría 1: Poblacional y Recreacional</option>
+                    <option value="Categoría 2">Categoría 2: Extracción y Cultivo Marino/Continental</option>
+                    <option value="Categoría 3">Categoría 3: Riego de Vegetales y Bebida de Animales</option>
+                    <option value="Categoría 4">Categoría 4: Conservación del Ambiente Acuático</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Subcategoría Específica</label>
+                  <select id="ecaSubcategorySelect" onchange="EcoNorma.onEcaSubcategoryChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                    <option value="TODOS">Todas las subcategorías</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="ecaAirControls" class="hidden contents">
+                <div>
+                  <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Periodo de Evaluación (D.S. 003-2017-MINAM)</label>
+                  <select id="ecaAirPeriodSelect" onchange="EcoNorma.onEcaAirPeriodChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                    <option value="TODOS">Todos los periodos (24h, 1h, 8h, Anual)</option>
+                    <option value="24 horas">24 horas</option>
+                    <option value="1 hora">1 hora</option>
+                    <option value="8 horas">8 horas</option>
+                    <option value="Anual">Anual</option>
+                    <option value="Mensual">Mensual</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="ecaSoilControls" class="hidden contents">
+                <div>
+                  <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Uso de Suelo (D.S. 011-2017-MINAM)</label>
+                  <select id="ecaSoilUseSelect" onchange="EcoNorma.onEcaSoilUseChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                    <option value="TODOS">Todos los usos de suelo</option>
+                    <option value="Suelo Agrícola">Suelo Agrícola</option>
+                    <option value="Suelo Residencial / Parques">Suelo Residencial / Parques</option>
+                    <option value="Suelo Comercial / Industrial / Extractivo">Suelo Comercial / Industrial / Extractivo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="ecaNoiseControls" class="hidden contents">
+                <div>
+                  <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Zona Acústica (D.S. 085-2003-PCM)</label>
+                  <select id="ecaNoiseZoneSelect" onchange="EcoNorma.onEcaNoiseZoneChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                    <option value="TODOS">Todas las zonas (Residencial, Comercial, Industrial)</option>
+                    <option value="Zona Residencial">Zona Residencial</option>
+                    <option value="Zona Comercial">Zona Comercial</option>
+                    <option value="Zona Industrial">Zona Industrial</option>
+                    <option value="Zona de Protección Especial">Zona de Protección Especial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="ecaRniControls" class="hidden contents">
+                <div class="col-span-full text-slate-500 dark:text-slate-400">
+                  <i data-lucide="radio" class="w-4 h-4 inline mr-1 text-indigo-500"></i>
+                  Valores regulados bajo el <strong>D.S. 038-2003-MTC</strong> para radiaciones no ionizantes en telecomunicaciones y energía.
+                </div>
+              </div>
+
+              <!-- Parameter filter input within ECA -->
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Filtrar Parámetro en ECA</label>
+                <input 
+                  type="text" 
+                  id="ecaSearchInput"
+                  oninput="EcoNorma.onSubSearchInput(event)"
+                  placeholder="Ej. Plomo, Cadmio, pH, DBO5..." 
+                  class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- B.2 Sub-panel: LMP -->
+          <div id="instSubpanelLmp" class="hidden space-y-5">
+            <div class="bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 rounded-2xl p-4 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-3">
+              <i data-lucide="info" class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></i>
+              <div>
+                <strong>LMP (En la Fuente de Emisión/Vertimiento):</strong> Regulan las concentraciones permitidas en efluentes líquidos o emisiones gaseosas descargadas por actividades productivas específicas. 
+                El filtrado entre sector y medio u objeto regulado es <strong>bidireccional</strong>: al elegir un medio se restringen los sectores con registros, y viceversa. No se imponen categorías si la norma no las contempla.
+              </div>
+            </div>
+
+            <!-- Bidirectional Cascading LMP Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Sector Productivo / Actividad</label>
+                <select id="lmpSectorSelect" onchange="EcoNorma.onLmpSectorChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos los sectores con LMP</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Medio / Objeto Regulado</label>
+                <select id="lmpMediumSelect" onchange="EcoNorma.onLmpMediumChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos los medios / objetos</option>
+                  <option value="Agua">Agua (Efluentes líquidos)</option>
+                  <option value="Aire">Aire (Emisiones gaseosas)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Filtrar Parámetro en LMP</label>
+                <input 
+                  type="text" 
+                  id="lmpSearchInput"
+                  oninput="EcoNorma.onSubSearchInput(event)"
+                  placeholder="Ej. Cobre, Zinc, SO2, Partículas, DBO5..." 
+                  class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- B.3 Sub-panel: VMA -->
+          <div id="instSubpanelVma" class="hidden space-y-5">
+            <div class="bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/40 rounded-2xl p-4 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-3">
+              <i data-lucide="info" class="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5"></i>
+              <div>
+                <strong>Valores Máximos Admisibles (D.S. 010-2019-VIVIENDA):</strong> Regulan exclusivamente las descargas de <strong>Aguas Residuales No Domésticas (UND)</strong> que ingresan al sistema de alcantarillado sanitario público. 
+                <strong>Normativa transversal:</strong> No constituye un límite exclusivo de un sector productivo, sino una condición aplicable a cualquier usuario comercial o industrial que vierta a la red de alcantarillado gestionada por EPS o SEDAPAL.
+              </div>
+            </div>
+
+            <!-- VMA Contextual Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Anexo Normativo (D.S. 010-2019-VIVIENDA)</label>
+                <select id="vmaAnnexSelect" onchange="EcoNorma.onVmaAnnexChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                  <option value="TODOS">Todos los anexos VMA (24 parámetros)</option>
+                  <option value="Anexo 1">Anexo 1: Parámetros con pago de valores adicionales por exceso de concentración (4 parámetros)</option>
+                  <option value="Anexo 2">Anexo 2: Parámetros de descarga prohibida al alcantarillado (20 parámetros)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Filtrar Parámetro en VMA</label>
+                <input 
+                  type="text" 
+                  id="vmaSearchInput"
+                  oninput="EcoNorma.onSubSearchInput(event)"
+                  placeholder="Ej. DBO5, DQO, SST, AyG, Cianuro, Plomo, pH..." 
+                  class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PANEL MODO C: EXPLORAR POR SECTOR PRODUCTIVO -->
+        <!-- ========================================================= -->
+        <div id="modePanelSector" class="hidden space-y-6">
+          <!-- Tri-Group Relational Explanatory Banner -->
+          <div class="bg-gradient-to-r from-amber-500/10 via-sky-500/10 to-purple-500/10 border border-slate-200 dark:border-slate-800 rounded-2xl p-4.5 space-y-2 text-xs">
+            <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="network" class="w-4 h-4 text-amber-600"></i>
+              Arquitectura Jurídica de la Consulta Sectorial: Estructuración en Tres Grupos Normativos
+            </div>
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+              Para garantizar rigor técnico y evitar confusiones, los resultados de un sector económico no se mezclan indiscriminadamente, sino que se ordenan en <strong>tres niveles normativos</strong> claramente diferenciados:
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-[11px]">
+              <div class="p-2.5 rounded-xl badge-rel-specific">
+                <span class="font-black block text-amber-900 dark:text-amber-300 mb-0.5">Grupo 1 · Normativa Específica del Sector</span>
+                <span>LMP directamente obligatorios para efluentes y emisiones de las instalaciones del sector.</span>
+              </div>
+              <div class="p-2.5 rounded-xl badge-rel-general">
+                <span class="font-black block text-sky-900 dark:text-sky-300 mb-0.5">Grupo 2 · ECA Generales Relacionados</span>
+                <span>Estándares ambientales de referencia del cuerpo receptor (agua, aire, suelo). No son exclusivos del sector.</span>
+              </div>
+              <div class="p-2.5 rounded-xl badge-rel-conditional">
+                <span class="font-black block text-purple-900 dark:text-purple-300 mb-0.5">Grupo 3 · Aplicación Condicionada (VMA)</span>
+                <span>Aplica solo si el establecimiento descarga aguas residuales a la red de alcantarillado sanitario público.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sector Selector Pills -->
+          <div class="space-y-2">
+            <label class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center justify-between">
+              <span>1. Selecciona el Sector Productivo:</span>
+              <span id="currentSectorLabel" class="font-bold text-amber-600 dark:text-amber-400 capitalize">Minería y Metalurgia</span>
+            </label>
+            <div class="flex flex-wrap gap-2" id="sectorPillsContainer">
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Minería y Metalurgia')" class="sec-pill active px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Minería y Metalurgia">
+                <i data-lucide="pickaxe" class="w-3.5 h-3.5"></i> Minería y Metalurgia
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Hidrocarburos')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Hidrocarburos">
+                <i data-lucide="flame" class="w-3.5 h-3.5"></i> Hidrocarburos
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Electricidad')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Electricidad">
+                <i data-lucide="zap" class="w-3.5 h-3.5"></i> Electricidad
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Pesquería')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Pesquería">
+                <i data-lucide="fish" class="w-3.5 h-3.5"></i> Pesca y Acuicultura
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Industria Manufacturera')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Industria Manufacturera">
+                <i data-lucide="cog" class="w-3.5 h-3.5"></i> Industria Manufacturera
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Cemento y Construcción')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Cemento y Construcción">
+                <i data-lucide="building-2" class="w-3.5 h-3.5"></i> Cemento y Construcción
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Saneamiento / PTAR')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Saneamiento / PTAR">
+                <i data-lucide="pipette" class="w-3.5 h-3.5"></i> Saneamiento (PTAR)
+              </button>
+              <button type="button" onclick="EcoNorma.setSectorModeSector('Transporte')" class="sec-pill px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5" data-sec="Transporte">
+                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Transporte
+              </button>
+            </div>
+          </div>
+
+          <!-- Secondary Cumulative Filters for Sector Mode -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+            <div>
+              <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Medio Ambiental</label>
+              <select id="sectorFilterMedium" onchange="EcoNorma.onSectorSecondaryFilterChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                <option value="TODOS">Todos los medios</option>
+                <option value="Agua">Agua (Efluentes, Receptores, VMA)</option>
+                <option value="Aire">Aire (Emisiones y Calidad)</option>
+                <option value="Suelo">Suelo</option>
+                <option value="Ruido">Ruido</option>
+                <option value="Radiación no ionizante">Radiación RNI</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Objeto Regulado</label>
+              <select id="sectorFilterRegulatedObject" onchange="EcoNorma.onSectorSecondaryFilterChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                <option value="TODOS">Todos los objetos regulados</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Grupo de Relación Normativa</label>
+              <select id="sectorFilterRelationType" onchange="EcoNorma.onSectorSecondaryFilterChange()" class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200">
+                <option value="TODOS">Todos los grupos (1, 2 y 3)</option>
+                <option value="ESPECIFICA_SECTOR">Solo Grupo 1: Normativa Específica (LMP)</option>
+                <option value="ECA_GENERAL">Solo Grupo 2: ECA Generales de Cuerpo Receptor</option>
+                <option value="APLICACION_CONDICIONADA">Solo Grupo 3: Aplicación Condicionada (VMA)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="font-bold text-slate-600 dark:text-slate-300 block mb-1">Filtrar Parámetro en el Sector</label>
+              <input 
+                type="text" 
+                id="sectorSearchInput"
+                oninput="EcoNorma.onSubSearchInput(event)"
+                placeholder="Ej. Plomo, Arsénico, DBO5, PM2.5, pH..." 
+                class="w-full py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
+              >
+            </div>
           </div>
         </div>
 
         <!-- Active Filter Tags & View Mode Switcher -->
-        <div class="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs">
           <div id="activeFiltersTags" class="flex flex-wrap items-center gap-1.5"></div>
           
           <div class="flex items-center gap-3">
-            <span id="resultsCount" class="font-bold text-slate-700 dark:text-slate-300">0 resultados</span>
+            <span id="resultsCount" class="font-bold text-slate-700 dark:text-slate-300">0 resultados encontrados</span>
             <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-              <button id="viewCardsBtn" aria-label="Vista tarjetas" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100 transition-all">
+              <button id="viewCardsBtn" onclick="EcoNorma.setViewMode('cards')" aria-label="Vista tarjetas" class="p-1.5 rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-slate-100 transition-all" title="Vista en tarjetas">
                 <i data-lucide="layout-grid" class="w-4 h-4"></i>
               </button>
-              <button id="viewTableBtn" aria-label="Vista tabla" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-all">
+              <button id="viewTableBtn" onclick="EcoNorma.setViewMode('table')" aria-label="Vista tabla" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 transition-all" title="Vista en tabla tabular">
                 <i data-lucide="table" class="w-4 h-4"></i>
               </button>
             </div>
