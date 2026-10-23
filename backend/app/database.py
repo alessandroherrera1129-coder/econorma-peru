@@ -22,7 +22,7 @@ def normalize_text(text: Optional[str]) -> str:
     return clean.lower().strip()
 
 def get_db_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20.0)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -30,6 +30,7 @@ def init_db():
     """Crea las tablas relacionales e índices, aplica migraciones no destructivas y carga seeds si es necesario."""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = get_db_connection()
+    conn.execute("PRAGMA journal_mode=WAL;")
     cursor = conn.cursor()
 
     # 1. Tabla de Normas
@@ -43,6 +44,7 @@ def init_db():
         instrument TEXT NOT NULL,
         environmental_medium TEXT,
         sector TEXT,
+        regulated_object TEXT,
         year INTEGER NOT NULL,
         publication_date TEXT,
         effective_date TEXT,
@@ -68,7 +70,7 @@ def init_db():
         sector TEXT,
         subsector TEXT,
         activity TEXT,
-        category TEXT NOT NULL,
+        category TEXT,
         subcategory TEXT,
         parameter_name TEXT NOT NULL,
         alternative_names TEXT,
@@ -103,6 +105,9 @@ def init_db():
         last_verified_at TIMESTAMP,
         verification_status TEXT NOT NULL DEFAULT 'VERIFICADO',
         admin_comment TEXT,
+        regulated_object TEXT,
+        sector_relation_type TEXT,
+        applicability_condition TEXT,
         search_tokens TEXT,
         created_at TIMESTAMP,
         updated_at TIMESTAMP,
@@ -150,6 +155,7 @@ def init_db():
 
     add_column_if_missing("norms", "norm_type", "TEXT")
     add_column_if_missing("norms", "alternate_url", "TEXT")
+    add_column_if_missing("norms", "regulated_object", "TEXT")
     add_column_if_missing("norms", "last_verified_at", "TIMESTAMP")
     add_column_if_missing("norms", "created_at", "TIMESTAMP")
     add_column_if_missing("norms", "updated_at", "TIMESTAMP")
@@ -158,6 +164,9 @@ def init_db():
     add_column_if_missing("parameters", "limit_type", "TEXT")
     add_column_if_missing("parameters", "special_condition", "TEXT")
     add_column_if_missing("parameters", "admin_comment", "TEXT")
+    add_column_if_missing("parameters", "regulated_object", "TEXT")
+    add_column_if_missing("parameters", "sector_relation_type", "TEXT")
+    add_column_if_missing("parameters", "applicability_condition", "TEXT")
     add_column_if_missing("parameters", "last_verified_at", "TIMESTAMP")
     add_column_if_missing("parameters", "created_at", "TIMESTAMP")
     add_column_if_missing("parameters", "updated_at", "TIMESTAMP")
@@ -180,6 +189,8 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_norm ON parameters(norm_code);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_status ON parameters(status);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_verif ON parameters(verification_status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_reg_obj ON parameters(regulated_object);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_param_sec_rel ON parameters(sector_relation_type);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_target ON audit_logs(target_type, target_id);")
 
     conn.commit()
@@ -189,6 +200,33 @@ def init_db():
     load_seed_parameters(conn)
 
     conn.close()
+
+def normalize_sector_name(sector: Optional[str]) -> str:
+    """Normaliza y unifica denominaciones del catálogo de sectores."""
+    if not sector:
+        return ""
+    norm = normalize_text(sector)
+    if "miner" in norm:
+        return "Minería y Metalurgia"
+    if "hidrocar" in norm:
+        return "Hidrocarburos"
+    if "electri" in norm:
+        return "Electricidad"
+    if "pesq" in norm or "pesca" in norm:
+        return "Pesquería"
+    if "acuicul" in norm:
+        return "Pesquería / Acuicultura"
+    if "manufac" in norm or "industria" in norm:
+        return "Industria Manufacturera"
+    if "cemento" in norm or "construc" in norm:
+        return "Cemento y Construcción"
+    if "saneam" in norm or "ptar" in norm:
+        return "Saneamiento / PTAR"
+    if "transp" in norm:
+        return "Transporte"
+    if "agric" in norm or "ganad" in norm:
+        return "Agricultura y Ganadería"
+    return sector.strip()
 
 def compute_search_tokens(p: dict) -> str:
     parts = [
@@ -203,7 +241,10 @@ def compute_search_tokens(p: dict) -> str:
         str(p.get("instrument") or ""),
         str(p.get("norm_code") or ""),
         str(p.get("norm_name") or ""),
-        str(p.get("issuing_entity") or "")
+        str(p.get("issuing_entity") or ""),
+        str(p.get("regulated_object") or ""),
+        str(p.get("sector_relation_type") or ""),
+        str(p.get("applicability_condition") or "")
     ]
     raw = " ".join(parts)
     return normalize_text(raw)
@@ -220,6 +261,7 @@ def log_audit(
     comment: Optional[str] = None
 ):
     """Registra una entrada en el historial de modificaciones del sistema con tolerancia a cualquier esquema."""
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -252,9 +294,11 @@ def log_audit(
             values = [data[k] for k in valid_cols]
             cursor.execute(f"INSERT INTO audit_logs ({col_names}) VALUES ({placeholders});", values)
             conn.commit()
-        conn.close()
     except Exception as e:
         print(f"[WARN] Error registrando audit log: {e}")
+    finally:
+        if conn:
+            conn.close()
 
 def load_seed_norms(conn: sqlite3.Connection):
     data_dir = Path(__file__).resolve().parent / "data"
@@ -268,13 +312,13 @@ def load_seed_norms(conn: sqlite3.Connection):
         cursor.execute("""
         INSERT OR REPLACE INTO norms (
             code, norm_type, norm_number, title, issuing_entity, instrument,
-            environmental_medium, sector, year, publication_date, effective_date,
+            environmental_medium, sector, regulated_object, year, publication_date, effective_date,
             status, modifying_norm, derogating_norm, official_url, alternate_url,
             summary, last_verified_date, last_verified_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'));
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'));
         """, (
             n["code"], n.get("norm_type", "Decreto Supremo"), n["norm_number"], n["title"], n["issuing_entity"], n["instrument"],
-            n.get("environmental_medium"), n.get("sector"), n["year"], n.get("publication_date"),
+            n.get("environmental_medium"), n.get("sector"), n.get("regulated_object"), n["year"], n.get("publication_date"),
             n.get("effective_date"), n.get("status", "VIGENTE"), n.get("modifying_norm"),
             n.get("derogating_norm"), n["official_url"], n.get("alternate_url"), n.get("summary"), n.get("last_verified_date")
         ))
@@ -300,7 +344,8 @@ def load_seed_parameters(conn: sqlite3.Connection):
             norm_code, norm_name, year, annex, table_ref, article_ref, page_ref,
             issuing_entity, official_url, source_url_override, publication_date, effective_date,
             status, modifying_norm, derogating_norm, last_verified_date, last_verified_at,
-            verification_status, admin_comment, search_tokens
+            verification_status, admin_comment, search_tokens,
+            regulated_object, sector_relation_type, applicability_condition
         ) VALUES (
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?,
@@ -309,17 +354,19 @@ def load_seed_parameters(conn: sqlite3.Connection):
             ?, ?, ?, ?, ?, ?, ?,
             ?, ?, ?, ?, ?,
             ?, ?, ?, ?, datetime('now', 'localtime'),
+            ?, ?, ?,
             ?, ?, ?
         );
         """, (
             p["instrument"], p["environmental_medium"], p.get("sector"), p.get("subsector"), p.get("activity"),
-            p["category"], p.get("subcategory"), p["parameter_name"], p.get("alternative_names"), p.get("symbol"),
+            p.get("category"), p.get("subcategory"), p["parameter_name"], p.get("alternative_names"), p.get("symbol"),
             p.get("cas_number"), p.get("limit_type", "Máximo"), p.get("min_value"), p.get("max_value"), p.get("value_text"), p["unit"],
             p.get("evaluation_period"), p.get("frequency"), p.get("special_condition"), p.get("method_criteria"), p.get("observations"),
             p["norm_code"], p.get("norm_name", p["norm_code"]), p.get("year", 2017), p.get("annex"), p.get("table_ref"), p.get("article_ref"), p.get("page_ref"),
             p.get("issuing_entity", "MINAM"), p.get("official_url"), p.get("source_url_override"), p.get("publication_date"), p.get("effective_date"),
             p.get("status", "VIGENTE"), p.get("modifying_norm"), p.get("derogating_norm"), p.get("last_verified_date"),
-            p.get("verification_status", "VERIFICADO"), p.get("admin_comment"), search_tokens
+            p.get("verification_status", "VERIFICADO"), p.get("admin_comment"), search_tokens,
+            p.get("regulated_object"), p.get("sector_relation_type"), p.get("applicability_condition")
         ))
     conn.commit()
 
@@ -367,6 +414,9 @@ PARAM_SELECT_FIELDS = """
     p.last_verified_at,
     p.verification_status,
     p.admin_comment,
+    p.regulated_object,
+    p.sector_relation_type,
+    p.applicability_condition,
     p.search_tokens,
     p.created_at,
     p.updated_at,
@@ -377,11 +427,16 @@ PARAM_SELECT_FIELDS = """
 
 def search_parameters(
     query: Optional[str] = None,
+    mode: Optional[str] = None,
     instrument: Optional[str] = None,
     environmental_medium: Optional[str] = None,
     sector: Optional[str] = None,
+    regulated_object: Optional[str] = None,
+    sector_relation_type: Optional[str] = None,
     category: Optional[str] = None,
     subcategory: Optional[str] = None,
+    evaluation_period: Optional[str] = None,
+    annex: Optional[str] = None,
     status: Optional[str] = None,
     verification_status: Optional[str] = None,
     norm_code: Optional[str] = None,
@@ -407,6 +462,27 @@ def search_parameters(
             conditions.append("p.search_tokens LIKE ?")
             params.append(f"%{w}%")
 
+    # Modo Exploración por Sector Productivo (o filtro de sector con lógica tripartita)
+    if mode == "sector" and sector and sector != "TODOS":
+        norm_sec = normalize_text(sector)
+        # Búsqueda relacional de 3 grupos:
+        # Grupo 1: Específica del sector (LMP)
+        # Grupo 2: ECA general de calidad ambiental (Estándar general del medio receptor)
+        # Grupo 3: Aplicación condicionada (VMA al alcantarillado sanitario)
+        sector_group_condition = """(
+            (p.sector_relation_type = 'ESPECIFICA_SECTOR' AND p.search_tokens LIKE ?)
+            OR
+            (p.sector_relation_type = 'ECA_GENERAL')
+            OR
+            (p.sector_relation_type = 'APLICACION_CONDICIONADA')
+        )"""
+        conditions.append(sector_group_condition)
+        params.append(f"%{norm_sec}%")
+    elif sector and sector != "TODOS":
+        norm_sec = normalize_text(sector)
+        conditions.append("(p.sector LIKE ? OR p.search_tokens LIKE ?)")
+        params.extend([f"%{sector}%", f"%{norm_sec}%"])
+
     if instrument and instrument != "TODOS":
         conditions.append("p.instrument = ?")
         params.append(instrument)
@@ -415,9 +491,13 @@ def search_parameters(
         conditions.append("p.environmental_medium = ?")
         params.append(environmental_medium)
 
-    if sector and sector != "TODOS":
-        conditions.append("p.sector LIKE ?")
-        params.append(f"%{sector}%")
+    if regulated_object and regulated_object != "TODOS":
+        conditions.append("p.regulated_object = ?")
+        params.append(regulated_object)
+
+    if sector_relation_type and sector_relation_type != "TODOS":
+        conditions.append("p.sector_relation_type = ?")
+        params.append(sector_relation_type)
 
     if category and category != "TODOS":
         conditions.append("p.category LIKE ?")
@@ -426,6 +506,14 @@ def search_parameters(
     if subcategory and subcategory != "TODOS":
         conditions.append("p.subcategory LIKE ?")
         params.append(f"%{subcategory}%")
+
+    if evaluation_period and evaluation_period != "TODOS":
+        conditions.append("p.evaluation_period LIKE ?")
+        params.append(f"%{evaluation_period}%")
+
+    if annex and annex != "TODOS":
+        conditions.append("p.annex LIKE ?")
+        params.append(f"%{annex}%")
 
     if status and status != "TODOS":
         conditions.append("p.status = ?")
@@ -459,15 +547,32 @@ def search_parameters(
     total = cursor.fetchone()["total"]
 
     offset = (page - 1) * page_size
+
+    if mode == "sector":
+        order_clause = """
+        ORDER BY 
+            CASE p.sector_relation_type 
+                WHEN 'ESPECIFICA_SECTOR' THEN 1 
+                WHEN 'ECA_GENERAL' THEN 2 
+                WHEN 'APLICACION_CONDICIONADA' THEN 3 
+                ELSE 4 END,
+            CASE p.instrument WHEN 'LMP' THEN 1 WHEN 'ECA' THEN 2 WHEN 'VMA' THEN 3 ELSE 4 END,
+            p.parameter_name ASC, p.category ASC
+        """
+    else:
+        order_clause = """
+        ORDER BY 
+            CASE p.instrument WHEN 'ECA' THEN 1 WHEN 'LMP' THEN 2 WHEN 'VMA' THEN 3 ELSE 4 END,
+            p.parameter_name ASC, p.category ASC
+        """
+
     data_sql = f"""
     SELECT 
         {PARAM_SELECT_FIELDS}
     FROM parameters p
     LEFT JOIN norms n ON p.norm_code = n.code
     {where_clause}
-    ORDER BY 
-        CASE p.instrument WHEN 'ECA' THEN 1 WHEN 'LMP' THEN 2 WHEN 'VMA' THEN 3 ELSE 4 END,
-        p.parameter_name ASC, p.category ASC
+    {order_clause}
     LIMIT ? OFFSET ?;
     """
     cursor.execute(data_sql, params + [page_size, offset])
@@ -628,7 +733,7 @@ def get_system_stats() -> Dict[str, Any]:
         "version": "1.1.0"
     }
 
-def get_filter_options() -> Dict[str, List[str]]:
+def get_filter_options() -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -641,8 +746,17 @@ def get_filter_options() -> Dict[str, List[str]]:
     cursor.execute("SELECT DISTINCT sector FROM parameters WHERE sector IS NOT NULL AND sector != '' ORDER BY sector;")
     sectors = [r["sector"] for r in cursor.fetchall() if r["sector"]]
 
-    cursor.execute("SELECT DISTINCT category FROM parameters ORDER BY category;")
+    cursor.execute("SELECT DISTINCT regulated_object FROM parameters WHERE regulated_object IS NOT NULL AND regulated_object != '' ORDER BY regulated_object;")
+    regulated_objects = [r["regulated_object"] for r in cursor.fetchall() if r["regulated_object"]]
+
+    cursor.execute("SELECT DISTINCT sector_relation_type FROM parameters WHERE sector_relation_type IS NOT NULL AND sector_relation_type != '' ORDER BY sector_relation_type;")
+    sector_relation_types = [r["sector_relation_type"] for r in cursor.fetchall() if r["sector_relation_type"]]
+
+    cursor.execute("SELECT DISTINCT category FROM parameters WHERE category IS NOT NULL AND category != '' ORDER BY category;")
     categories = [r["category"] for r in cursor.fetchall() if r["category"]]
+
+    cursor.execute("SELECT DISTINCT evaluation_period FROM parameters WHERE evaluation_period IS NOT NULL AND evaluation_period != '' ORDER BY evaluation_period;")
+    evaluation_periods = [r["evaluation_period"] for r in cursor.fetchall() if r["evaluation_period"]]
 
     cursor.execute("SELECT DISTINCT issuing_entity FROM parameters ORDER BY issuing_entity;")
     entities = [r["issuing_entity"] for r in cursor.fetchall() if r["issuing_entity"]]
@@ -650,14 +764,53 @@ def get_filter_options() -> Dict[str, List[str]]:
     cursor.execute("SELECT code FROM norms ORDER BY code;")
     norm_codes = [r["code"] for r in cursor.fetchall() if r["code"]]
 
+    # Mapeo relacional de sectores y medios en LMP para filtros bidireccionales
+    cursor.execute("""
+        SELECT DISTINCT sector, environmental_medium, regulated_object
+        FROM parameters 
+        WHERE instrument = 'LMP' AND sector IS NOT NULL AND sector != ''
+        ORDER BY sector, environmental_medium;
+    """)
+    lmp_raw = [dict(r) for r in cursor.fetchall()]
+    
+    lmp_sectors = sorted(list({r["sector"] for r in lmp_raw if r["sector"]}))
+    lmp_media = sorted(list({r["environmental_medium"] for r in lmp_raw if r["environmental_medium"]}))
+    sector_to_media = {}
+    medium_to_sectors = {}
+    
+    for r in lmp_raw:
+        s = r["sector"]
+        m = r["environmental_medium"]
+        if s not in sector_to_media:
+            sector_to_media[s] = []
+        if m not in sector_to_media[s]:
+            sector_to_media[s].append(m)
+            
+        if m not in medium_to_sectors:
+            medium_to_sectors[m] = []
+        if s not in medium_to_sectors[m]:
+            medium_to_sectors[m].append(s)
+
+    lmp_mapping = {
+        "sectors": lmp_sectors,
+        "media": lmp_media,
+        "sector_to_media": sector_to_media,
+        "medium_to_sectors": medium_to_sectors,
+        "pairs": lmp_raw
+    }
+
     conn.close()
     return {
         "instruments": instruments,
         "environmental_media": media,
         "sectors": sectors,
+        "regulated_objects": regulated_objects,
+        "sector_relation_types": sector_relation_types,
         "categories": categories,
+        "evaluation_periods": evaluation_periods,
         "issuing_entities": entities,
-        "norm_codes": norm_codes
+        "norm_codes": norm_codes,
+        "lmp_mapping": lmp_mapping
     }
 
 def save_inquiry(name: str, email: str, inquiry_type: str, subject: str, message: str) -> int:
@@ -674,16 +827,24 @@ def save_inquiry(name: str, email: str, inquiry_type: str, subject: str, message
 
 # --- Operaciones Administrativas: Parámetros ---
 
-def check_parameter_duplicate(parameter_name: str, category: str, norm_code: str, exclude_id: Optional[int] = None) -> List[Dict[str, Any]]:
+def check_parameter_duplicate(parameter_name: str, category: Optional[str], norm_code: str, exclude_id: Optional[int] = None) -> List[Dict[str, Any]]:
     norm_name = normalize_text(parameter_name)
     conn = get_db_connection()
     cursor = conn.cursor()
-    sql = """
-    SELECT id, parameter_name, category, subcategory, norm_code, unit, value_text 
-    FROM parameters 
-    WHERE (search_tokens LIKE ? OR parameter_name LIKE ?) AND category = ?
-    """
-    params = [f"%{norm_name}%", f"%{parameter_name}%", category]
+    if category:
+        sql = """
+        SELECT id, parameter_name, category, subcategory, norm_code, unit, value_text 
+        FROM parameters 
+        WHERE (search_tokens LIKE ? OR parameter_name LIKE ?) AND category = ?
+        """
+        params = [f"%{norm_name}%", f"%{parameter_name}%", category]
+    else:
+        sql = """
+        SELECT id, parameter_name, category, subcategory, norm_code, unit, value_text 
+        FROM parameters 
+        WHERE (search_tokens LIKE ? OR parameter_name LIKE ?) AND (category IS NULL OR category = '')
+        """
+        params = [f"%{norm_name}%", f"%{parameter_name}%"]
     if exclude_id:
         sql += " AND id != ?"
         params.append(exclude_id)
@@ -694,85 +855,90 @@ def check_parameter_duplicate(parameter_name: str, category: str, norm_code: str
 
 def create_parameter(param_data: dict, admin_user: str = "Administrador") -> int:
     conn = get_db_connection()
-    cursor = conn.cursor()
-    search_tokens = compute_search_tokens(param_data)
-    now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        cursor = conn.cursor()
+        search_tokens = compute_search_tokens(param_data)
+        now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    cursor.execute("PRAGMA table_info(parameters);")
-    existing_cols = {r["name"] for r in cursor.fetchall()}
+        cursor.execute("PRAGMA table_info(parameters);")
+        existing_cols = {r["name"] for r in cursor.fetchall()}
 
-    # Resolver metadatos de la norma si no vienen en la solicitud
-    norm_code = param_data.get("norm_code", "")
-    cursor.execute("SELECT title, issuing_entity, year, official_url FROM norms WHERE code = ? OR norm_number = ?;", (norm_code, norm_code))
-    norm_row = cursor.fetchone()
+        # Resolver metadatos de la norma si no vienen en la solicitud
+        norm_code = param_data.get("norm_code", "")
+        cursor.execute("SELECT title, issuing_entity, year, official_url FROM norms WHERE code = ? OR norm_number = ?;", (norm_code, norm_code))
+        norm_row = cursor.fetchone()
 
-    resolved_norm_name = param_data.get("norm_name") or (norm_row["title"] if norm_row else None) or norm_code or "Norma Oficial"
-    resolved_entity = param_data.get("issuing_entity") or (norm_row["issuing_entity"] if norm_row else None) or "MINAM"
-    resolved_year = param_data.get("year") or (norm_row["year"] if norm_row else None) or datetime.now().year
-    resolved_url = param_data.get("official_url") or (norm_row["official_url"] if norm_row else None)
+        resolved_norm_name = param_data.get("norm_name") or (norm_row["title"] if norm_row else None) or norm_code or "Norma Oficial"
+        resolved_entity = param_data.get("issuing_entity") or (norm_row["issuing_entity"] if norm_row else None) or "MINAM"
+        resolved_year = param_data.get("year") or (norm_row["year"] if norm_row else None) or datetime.now().year
+        resolved_url = param_data.get("official_url") or (norm_row["official_url"] if norm_row else None)
 
-    data = {
-        "instrument": param_data["instrument"],
-        "environmental_medium": param_data["environmental_medium"],
-        "sector": param_data.get("sector"),
-        "subsector": param_data.get("subsector"),
-        "activity": param_data.get("activity"),
-        "category": param_data["category"],
-        "subcategory": param_data.get("subcategory"),
-        "parameter_name": param_data["parameter_name"],
-        "alternative_names": param_data.get("alternative_names"),
-        "symbol": param_data.get("symbol"),
-        "cas_number": param_data.get("cas_number"),
-        "limit_type": param_data.get("limit_type", "Máximo"),
-        "min_value": param_data.get("min_value"),
-        "max_value": param_data.get("max_value"),
-        "value_text": param_data.get("value_text"),
-        "unit": param_data["unit"],
-        "evaluation_period": param_data.get("evaluation_period"),
-        "frequency": param_data.get("frequency"),
-        "special_condition": param_data.get("special_condition"),
-        "method_criteria": param_data.get("method_criteria"),
-        "observations": param_data.get("observations"),
-        "norm_code": norm_code,
-        "norm_name": resolved_norm_name,
-        "year": resolved_year,
-        "annex": param_data.get("annex"),
-        "table_ref": param_data.get("table_ref"),
-        "article_ref": param_data.get("article_ref"),
-        "page_ref": param_data.get("page_ref"),
-        "issuing_entity": resolved_entity,
-        "official_url": resolved_url,
-        "source_url_override": param_data.get("source_url_override"),
-        "publication_date": param_data.get("publication_date"),
-        "effective_date": param_data.get("effective_date"),
-        "status": param_data.get("status", "VIGENTE"),
-        "modifying_norm": param_data.get("modifying_norm"),
-        "derogating_norm": param_data.get("derogating_norm"),
-        "last_verified_date": param_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")),
-        "last_verified_at": now_ts,
-        "verification_status": param_data.get("verification_status", "VERIFICADO"),
-        "admin_comment": param_data.get("admin_comment"),
-        "search_tokens": search_tokens,
-        "created_at": now_ts,
-        "updated_at": now_ts
-    }
+        data = {
+            "instrument": param_data["instrument"],
+            "environmental_medium": param_data["environmental_medium"],
+            "sector": param_data.get("sector"),
+            "subsector": param_data.get("subsector"),
+            "activity": param_data.get("activity"),
+            "category": param_data.get("category"),
+            "subcategory": param_data.get("subcategory"),
+            "parameter_name": param_data["parameter_name"],
+            "alternative_names": param_data.get("alternative_names"),
+            "symbol": param_data.get("symbol"),
+            "cas_number": param_data.get("cas_number"),
+            "limit_type": param_data.get("limit_type", "Máximo"),
+            "min_value": param_data.get("min_value"),
+            "max_value": param_data.get("max_value"),
+            "value_text": param_data.get("value_text"),
+            "unit": param_data["unit"],
+            "evaluation_period": param_data.get("evaluation_period"),
+            "frequency": param_data.get("frequency"),
+            "special_condition": param_data.get("special_condition"),
+            "method_criteria": param_data.get("method_criteria"),
+            "observations": param_data.get("observations"),
+            "norm_code": norm_code,
+            "norm_name": resolved_norm_name,
+            "year": resolved_year,
+            "annex": param_data.get("annex"),
+            "table_ref": param_data.get("table_ref"),
+            "article_ref": param_data.get("article_ref"),
+            "page_ref": param_data.get("page_ref"),
+            "issuing_entity": resolved_entity,
+            "official_url": resolved_url,
+            "source_url_override": param_data.get("source_url_override"),
+            "publication_date": param_data.get("publication_date"),
+            "effective_date": param_data.get("effective_date"),
+            "status": param_data.get("status", "VIGENTE"),
+            "modifying_norm": param_data.get("modifying_norm"),
+            "derogating_norm": param_data.get("derogating_norm"),
+            "last_verified_date": param_data.get("last_verified_date", datetime.now().strftime("%Y-%m-%d")),
+            "last_verified_at": now_ts,
+            "verification_status": param_data.get("verification_status", "VERIFICADO"),
+            "admin_comment": param_data.get("admin_comment"),
+            "regulated_object": param_data.get("regulated_object"),
+            "sector_relation_type": param_data.get("sector_relation_type"),
+            "applicability_condition": param_data.get("applicability_condition"),
+            "search_tokens": search_tokens,
+            "created_at": now_ts,
+            "updated_at": now_ts
+        }
 
-    valid_cols = [k for k in data.keys() if k in existing_cols]
-    placeholders = ", ".join(["?"] * len(valid_cols))
-    col_names = ", ".join(valid_cols)
-    values = [data[k] for k in valid_cols]
+        valid_cols = [k for k in data.keys() if k in existing_cols]
+        placeholders = ", ".join(["?"] * len(valid_cols))
+        col_names = ", ".join(valid_cols)
+        values = [data[k] for k in valid_cols]
 
-    cursor.execute(f"INSERT INTO parameters ({col_names}) VALUES ({placeholders});", values)
-    conn.commit()
-    pid = cursor.lastrowid
-    conn.close()
+        cursor.execute(f"INSERT INTO parameters ({col_names}) VALUES ({placeholders});", values)
+        conn.commit()
+        pid = cursor.lastrowid
+    finally:
+        conn.close()
 
     log_audit(
         target_type="PARAMETER",
         target_id=str(pid),
         target_name=param_data["parameter_name"],
         action="CREATE",
-        comment=f"Parámetro creado en categoría {param_data['category']} con norma {param_data['norm_code']}",
+        comment=f"Parámetro creado en categoría {param_data.get('category') or '-'} con norma {param_data['norm_code']}",
         admin_user=admin_user
     )
     return pid
@@ -912,6 +1078,7 @@ def create_norm(norm_data: dict, admin_user: str = "Administrador") -> str:
         "instrument": norm_data["instrument"],
         "environmental_medium": norm_data.get("environmental_medium"),
         "sector": norm_data.get("sector"),
+        "regulated_object": norm_data.get("regulated_object"),
         "year": norm_data["year"],
         "publication_date": norm_data.get("publication_date"),
         "effective_date": norm_data.get("effective_date"),

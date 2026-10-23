@@ -24,6 +24,7 @@ class NormBase(BaseModel):
     official_url: str = Field(..., description="Enlace oficial en gob.pe, El Peruano, MINAM o SINIA")
     alternate_url: Optional[str] = Field(None, description="Enlace alternativo de respaldo")
     summary: Optional[str] = Field(None, description="Resumen descriptivo de la norma")
+    regulated_object: Optional[str] = Field(None, description="Objeto regulado normativo")
     last_verified_date: Optional[str] = None
     last_verified_at: Optional[str] = None
 
@@ -38,6 +39,7 @@ class NormUpdate(BaseModel):
     instrument: Optional[str] = None
     environmental_medium: Optional[str] = None
     sector: Optional[str] = None
+    regulated_object: Optional[str] = None
     year: Optional[int] = None
     publication_date: Optional[str] = None
     effective_date: Optional[str] = None
@@ -60,7 +62,7 @@ class ParameterBase(BaseModel):
     sector: Optional[str] = Field(None, description="Minería, Hidrocarburos, Pesquería, PTAR, etc.")
     subsector: Optional[str] = None
     activity: Optional[str] = None
-    category: str = Field(..., description="Categoría o Uso normativo")
+    category: Optional[str] = Field(None, description="Categoría o Uso normativo")
     subcategory: Optional[str] = Field(None, description="Subcategoría específica")
     parameter_name: str = Field(..., description="Nombre oficial del parámetro")
     alternative_names: Optional[str] = Field(None, description="Sinónimos o nombres alternativos")
@@ -95,6 +97,9 @@ class ParameterBase(BaseModel):
     last_verified_at: Optional[str] = None
     verification_status: str = Field("VERIFICADO", description="VERIFICADO / PENDIENTE DE VERIFICACIÓN / REQUIERE REVISIÓN / NO PUBLICAR")
     admin_comment: Optional[str] = Field(None, description="Comentario administrativo de revisión")
+    regulated_object: Optional[str] = Field(None, description="Objeto regulado normativo")
+    sector_relation_type: Optional[str] = Field(None, description="Tipo de relación sectorial: ESPECIFICA_SECTOR, ECA_GENERAL, APLICACION_CONDICIONADA")
+    applicability_condition: Optional[str] = Field(None, description="Condición específica de aplicabilidad normativa")
 
 class ParameterCreate(ParameterBase):
     pass
@@ -136,6 +141,9 @@ class ParameterUpdate(BaseModel):
     last_verified_date: Optional[str] = None
     last_verified_at: Optional[str] = None
     admin_comment: Optional[str] = None
+    regulated_object: Optional[str] = None
+    sector_relation_type: Optional[str] = None
+    applicability_condition: Optional[str] = None
 
 class ParameterResponse(ParameterBase):
     id: int
@@ -144,9 +152,12 @@ class ParameterResponse(ParameterBase):
 
 class SearchQuery(BaseModel):
     query: Optional[str] = None
+    mode: Optional[str] = None  # 'parameter', 'instrument', 'sector'
     instrument: Optional[str] = None
     environmental_medium: Optional[str] = None
     sector: Optional[str] = None
+    regulated_object: Optional[str] = None
+    sector_relation_type: Optional[str] = None
     category: Optional[str] = None
     subcategory: Optional[str] = None
     status: Optional[str] = None
