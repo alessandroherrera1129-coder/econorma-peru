@@ -2882,6 +2882,26 @@ const EcoNorma = (function() {
     }
   }
 
+  async function downloadCsvTemplate() {
+    try {
+      const res = await fetch('/api/parameters/csv-template');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'plantilla_importacion_parametros_econorma.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Plantilla CSV descargada con éxito. Puedes abrirla en Excel.', 'success');
+      } else {
+        showToast('Error al descargar la plantilla CSV', 'error');
+      }
+    } catch (e) {
+      showToast('Error de comunicación con el servidor', 'error');
+    }
+  }
+
   // --- UTILIDADES PÚBLICAS Y EVENTOS ---
 
   function exportFilteredCsv() {
@@ -3159,6 +3179,7 @@ const EcoNorma = (function() {
     downloadBackup,
     downloadSeedParameters,
     downloadSeedNorms,
+    downloadCsvTemplate,
     loadInterCategoryComparison,
     evaluateCompliance,
     switchAdminSubTab,
