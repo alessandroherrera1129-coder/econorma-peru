@@ -3,11 +3,12 @@ Router Administrativo Seguro para EcoNorma Perú
 Permite la gestión CRUD integral de parámetros, normas oficiales, resolución y prueba de URLs,
 auditoría de cambios, detección de duplicados y copias de seguridad.
 """
-from fastapi import APIRouter, HTTPException, Header, Query, UploadFile, File
+from fastapi import APIRouter, HTTPException, Header, Query, UploadFile, File, Response
 from typing import Optional, List, Dict, Any
 import json
 import csv
 import io
+import unicodedata
 from ..config import ADMIN_TOKEN
 from ..database import (
     create_parameter, update_parameter, verify_parameter, delete_parameter, get_parameter_by_id,
@@ -278,16 +279,395 @@ def list_inquiries(x_admin_token: Optional[str] = Header(None)):
     conn.close()
     return {"total": len(rows), "inquiries": rows}
 
+HEADER_MAPPING = {
+    # Instrumento
+    "instrument": "instrument",
+    "instrumento": "instrument",
+    # Medio
+    "environmental_medium": "environmental_medium",
+    "medio": "environmental_medium",
+    "medio ambiental": "environmental_medium",
+    "medio_ambiental": "environmental_medium",
+    "medioambiente": "environmental_medium",
+    # Parámetro
+    "parameter_name": "parameter_name",
+    "parametro": "parameter_name",
+    "parámetro": "parameter_name",
+    "nombre parametro": "parameter_name",
+    "nombre parámetro": "parameter_name",
+    "parameter": "parameter_name",
+    # Unidad
+    "unit": "unit",
+    "unidad": "unit",
+    "unidad de medida": "unit",
+    "unidad_medida": "unit",
+    # Norma
+    "norm_code": "norm_code",
+    "codigo norma": "norm_code",
+    "código norma": "norm_code",
+    "codigo_norma": "norm_code",
+    "norma": "norm_code",
+    "norma legal": "norm_code",
+    # Categoría
+    "category": "category",
+    "categoria": "category",
+    "categoría": "category",
+    # Subcategoría
+    "subcategory": "subcategory",
+    "subcategoria": "subcategory",
+    "subcategoría": "subcategory",
+    # Sector
+    "sector": "sector",
+    "sector economico": "sector",
+    "sector económico": "sector",
+    "sector_economico": "sector",
+    # Subsector
+    "subsector": "subsector",
+    # Actividad
+    "activity": "activity",
+    "actividad": "activity",
+    # Objeto regulado
+    "regulated_object": "regulated_object",
+    "objeto regulado": "regulated_object",
+    "objeto_regulado": "regulated_object",
+    # Tipo relación sectorial
+    "sector_relation_type": "sector_relation_type",
+    "tipo relacion sectorial": "sector_relation_type",
+    "tipo relación sectorial": "sector_relation_type",
+    # Símbolo
+    "symbol": "symbol",
+    "simbolo": "symbol",
+    "símbolo": "symbol",
+    # CAS
+    "cas_number": "cas_number",
+    "cas": "cas_number",
+    "numero cas": "cas_number",
+    "número cas": "cas_number",
+    # Tipo límite
+    "limit_type": "limit_type",
+    "tipo limite": "limit_type",
+    "tipo límite": "limit_type",
+    # Valor mínimo
+    "min_value": "min_value",
+    "valor minimo": "min_value",
+    "valor mínimo": "min_value",
+    "min": "min_value",
+    # Valor máximo
+    "max_value": "max_value",
+    "valor maximo": "max_value",
+    "valor máximo": "max_value",
+    "max": "max_value",
+    # Valor texto
+    "value_text": "value_text",
+    "valor texto": "value_text",
+    "valor_texto": "value_text",
+    "valor": "value_text",
+    "valor normativo": "value_text",
+    # Periodo
+    "evaluation_period": "evaluation_period",
+    "periodo": "evaluation_period",
+    "periodo evaluacion": "evaluation_period",
+    "periodo evaluación": "evaluation_period",
+    "periodo_evaluacion": "evaluation_period",
+    # Frecuencia
+    "frequency": "frequency",
+    "frecuencia": "frequency",
+    # Condición especial
+    "special_condition": "special_condition",
+    "condicion especial": "special_condition",
+    "condición especial": "special_condition",
+    # Condición de aplicabilidad
+    "applicability_condition": "applicability_condition",
+    "condicion aplicabilidad": "applicability_condition",
+    "condición de aplicabilidad": "applicability_condition",
+    "condición aplicabilidad": "applicability_condition",
+    # Método
+    "method_criteria": "method_criteria",
+    "metodo": "method_criteria",
+    "método": "method_criteria",
+    "metodo_referencia": "method_criteria",
+    # Observaciones
+    "observations": "observations",
+    "observaciones": "observations",
+    "notas": "observations",
+    # Anexo / Tabla
+    "annex": "annex",
+    "anexo": "annex",
+    "table_ref": "table_ref",
+    "tabla": "table_ref",
+    "tabla_ref": "table_ref",
+    "article_ref": "article_ref",
+    "articulo": "article_ref",
+    "artículo": "article_ref",
+    "page_ref": "page_ref",
+    "pagina": "page_ref",
+    "página": "page_ref",
+    "issuing_entity": "issuing_entity",
+    "entidad": "issuing_entity",
+    "entidad emisora": "issuing_entity",
+    "official_url": "official_url",
+    "url oficial": "official_url",
+    "enlace oficial": "official_url",
+    "status": "status",
+    "estado": "status",
+}
+
+def clean_import_record(raw: dict) -> dict:
+    """Normaliza claves (español/inglés) y tipos de datos para inserción segura."""
+    cleaned = {}
+    for k, v in raw.items():
+        if not k:
+            continue
+        raw_key = str(k).strip()
+        low_key = raw_key.lower()
+        nfkd = unicodedata.normalize('NFKD', low_key)
+        unaccented_key = "".join(c for c in nfkd if not unicodedata.combining(c))
+        
+        target_key = HEADER_MAPPING.get(low_key) or HEADER_MAPPING.get(unaccented_key) or raw_key
+        
+        val = v.strip() if isinstance(v, str) else v
+        if val == "" or val == "null" or val == "None":
+            val = None
+        cleaned[target_key] = val
+
+    # Conversión numérica de límites
+    for num_field in ["min_value", "max_value"]:
+        val = cleaned.get(num_field)
+        if val is not None:
+            if isinstance(val, (int, float)):
+                cleaned[num_field] = float(val)
+            elif isinstance(val, str):
+                val_clean = val.replace(",", ".").strip()
+                try:
+                    cleaned[num_field] = float(val_clean)
+                except ValueError:
+                    cleaned[num_field] = None
+
+    # Normalización del instrumento
+    if cleaned.get("instrument"):
+        cleaned["instrument"] = str(cleaned["instrument"]).strip().upper()
+
+    # Normalización del medio ambiental
+    if cleaned.get("environmental_medium"):
+        med_str = str(cleaned["environmental_medium"]).strip().lower()
+        if "agua" in med_str or "efluente" in med_str or "alcantarillado" in med_str:
+            cleaned["environmental_medium"] = "Agua"
+        elif "aire" in med_str or "emision" in med_str or "emisión" in med_str:
+            cleaned["environmental_medium"] = "Aire"
+        elif "suelo" in med_str:
+            cleaned["environmental_medium"] = "Suelo"
+        elif "ruido" in med_str:
+            cleaned["environmental_medium"] = "Ruido"
+        elif "radiaci" in med_str:
+            cleaned["environmental_medium"] = "Radiación no ionizante"
+        else:
+            cleaned["environmental_medium"] = cleaned["environmental_medium"].capitalize()
+
+    # Generación automática de value_text si no fue proporcionado
+    if not cleaned.get("value_text"):
+        min_v = cleaned.get("min_value")
+        max_v = cleaned.get("max_value")
+        unit = cleaned.get("unit") or ""
+        if min_v is not None and max_v is not None:
+            cleaned["value_text"] = f"{min_v} - {max_v} {unit}".strip()
+        elif max_v is not None:
+            cleaned["value_text"] = f"{max_v} {unit}".strip()
+        elif min_v is not None:
+            cleaned["value_text"] = f"≥ {min_v} {unit}".strip()
+
+    # Tipo de límite predeterminado
+    if not cleaned.get("limit_type"):
+        if cleaned.get("min_value") is not None and cleaned.get("max_value") is not None:
+            cleaned["limit_type"] = "Rango"
+        elif cleaned.get("min_value") is not None:
+            cleaned["limit_type"] = "Mínimo"
+        else:
+            cleaned["limit_type"] = "Máximo"
+
+    # Asignación automática de relación sectorial si no viene
+    inst = cleaned.get("instrument")
+    if not cleaned.get("sector_relation_type"):
+        if inst == "ECA":
+            cleaned["sector_relation_type"] = "ECA_GENERAL"
+        elif inst == "LMP":
+            cleaned["sector_relation_type"] = "ESPECIFICA_SECTOR"
+        elif inst == "VMA":
+            cleaned["sector_relation_type"] = "APLICACION_CONDICIONADA"
+
+    # Asignación automática de objeto regulado si no viene
+    if not cleaned.get("regulated_object"):
+        med = cleaned.get("environmental_medium")
+        if inst == "ECA":
+            if med == "Agua":
+                cleaned["regulated_object"] = "Calidad ambiental del agua (Cuerpo receptor)"
+            elif med == "Aire":
+                cleaned["regulated_object"] = "Calidad del aire ambiental"
+            elif med == "Suelo":
+                cleaned["regulated_object"] = "Calidad ambiental del suelo"
+            elif med == "Ruido":
+                cleaned["regulated_object"] = "Calidad ambiental para ruido"
+            elif med == "Radiación no ionizante":
+                cleaned["regulated_object"] = "Exposición a radiaciones no ionizantes"
+            else:
+                cleaned["regulated_object"] = "Calidad ambiental"
+        elif inst == "VMA":
+            cleaned["regulated_object"] = "Descarga de aguas residuales no domésticas al alcantarillado sanitario"
+        elif inst == "LMP":
+            sec = cleaned.get("sector") or "regulado"
+            cleaned["regulated_object"] = f"Efluentes o emisiones del sector {sec}"
+
+    # Condición de aplicabilidad para VMA
+    if inst == "VMA" and not cleaned.get("applicability_condition"):
+        cleaned["applicability_condition"] = "Descargas de aguas residuales no domésticas (UND) a la red de alcantarillado sanitario (D.S. 010-2019-VIVIENDA)"
+
+    if not cleaned.get("status"):
+        cleaned["status"] = "VIGENTE"
+    if not cleaned.get("verification_status"):
+        cleaned["verification_status"] = "VERIFICADO"
+
+    return cleaned
+
+CSV_TEMPLATE_HEADERS = [
+    "instrument",
+    "environmental_medium",
+    "category",
+    "subcategory",
+    "parameter_name",
+    "symbol",
+    "cas_number",
+    "limit_type",
+    "min_value",
+    "max_value",
+    "value_text",
+    "unit",
+    "evaluation_period",
+    "sector",
+    "norm_code",
+    "annex",
+    "table_ref",
+    "method_criteria",
+    "applicability_condition",
+    "observations"
+]
+
+CSV_TEMPLATE_ROWS = [
+    [
+        "ECA",
+        "Agua",
+        "Categoría 1",
+        "A1: Aguas que pueden ser potabilizadas con desinfección",
+        "Plomo total",
+        "Pb",
+        "7439-92-1",
+        "Máximo",
+        "",
+        "0.01",
+        "0.01 mg/L",
+        "mg/L",
+        "",
+        "",
+        "D.S. 004-2017-MINAM",
+        "",
+        "Tabla N° 1",
+        "Espectrometría de absorción atómica",
+        "",
+        "Parámetro inorgánico de control obligatorio"
+    ],
+    [
+        "ECA",
+        "Aire",
+        "",
+        "",
+        "Dióxido de Azufre",
+        "SO2",
+        "7446-09-5",
+        "Máximo",
+        "",
+        "250",
+        "250 µg/m3",
+        "µg/m3",
+        "24 horas",
+        "",
+        "D.S. 003-2017-MINAM",
+        "",
+        "Tabla N° 1",
+        "Fluorescencia UV",
+        "",
+        "Periodo diario de evaluación"
+    ],
+    [
+        "LMP",
+        "Agua",
+        "",
+        "",
+        "Cobre disuelto",
+        "Cu",
+        "7440-50-8",
+        "Máximo",
+        "",
+        "0.5",
+        "0.5 mg/L",
+        "mg/L",
+        "Mensual",
+        "Minería y Metalurgia",
+        "D.S. 010-2010-MINAM",
+        "",
+        "Tabla N° 2",
+        "EPA 200.8",
+        "",
+        "Efluentes líquidos minero-metalúrgicos"
+    ],
+    [
+        "VMA",
+        "Agua",
+        "Anexo 1",
+        "",
+        "Demanda Bioquímica de Oxígeno",
+        "DBO5",
+        "",
+        "Máximo",
+        "",
+        "500",
+        "500 mg/L",
+        "mg/L",
+        "",
+        "",
+        "D.S. 010-2019-VIVIENDA",
+        "Anexo 1",
+        "Tabla N° 1",
+        "SMEWW 5210-B",
+        "Descargas a la red pública de alcantarillado sanitario",
+        "Pago por exceso de concentración"
+    ]
+]
+
+@router.get("/export/csv-template")
+def export_csv_template():
+    """Descarga la plantilla CSV oficial con estructura y filas de ejemplo."""
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(CSV_TEMPLATE_HEADERS)
+    for r in CSV_TEMPLATE_ROWS:
+        writer.writerow(r)
+    
+    output.seek(0)
+    response = Response(
+        content=output.getvalue().encode("utf-8-sig"),
+        media_type="text/csv"
+    )
+    response.headers["Content-Disposition"] = 'attachment; filename="plantilla_importacion_parametros_econorma.csv"'
+    return response
+
 @router.post("/import")
 async def import_data(file: UploadFile = File(...), x_admin_token: Optional[str] = Header(None)):
     verify_token(x_admin_token)
     content = await file.read()
     filename = file.filename or "data.json"
     
-    records = []
+    raw_records = []
     if filename.endswith(".json"):
         try:
-            records = json.loads(content.decode("utf-8"))
+            raw_records = json.loads(content.decode("utf-8"))
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error al decodificar JSON: {str(e)}")
     elif filename.endswith(".csv"):
@@ -295,7 +675,7 @@ async def import_data(file: UploadFile = File(...), x_admin_token: Optional[str]
             csv_text = content.decode("utf-8-sig")
             reader = csv.DictReader(io.StringIO(csv_text))
             for row in reader:
-                records.append(row)
+                raw_records.append(row)
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error al procesar CSV: {str(e)}")
     else:
@@ -306,7 +686,9 @@ async def import_data(file: UploadFile = File(...), x_admin_token: Optional[str]
     
     required_fields = ["instrument", "environmental_medium", "parameter_name", "unit", "norm_code"]
     
-    for idx, rec in enumerate(records, start=1):
+    for idx, raw in enumerate(raw_records, start=1):
+        rec = clean_import_record(raw)
+        
         missing = [f for f in required_fields if not rec.get(f)]
         if missing:
             validation_errors.append(f"Fila {idx}: Faltan campos obligatorios: {', '.join(missing)}")
@@ -338,7 +720,7 @@ async def import_data(file: UploadFile = File(...), x_admin_token: Optional[str]
 
     return {
         "success": True,
-        "total_received": len(records),
+        "total_received": len(raw_records),
         "total_imported": inserted_count,
         "validation_errors": validation_errors,
         "message": f"Se importaron {inserted_count} parámetros correctamente."

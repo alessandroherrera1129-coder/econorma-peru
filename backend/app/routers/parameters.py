@@ -147,6 +147,23 @@ def export_csv(
     response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
+@router.get("/csv-template")
+def download_public_csv_template():
+    """Descarga la plantilla CSV oficial para importación masiva de parámetros."""
+    from .admin import CSV_TEMPLATE_HEADERS, CSV_TEMPLATE_ROWS
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(CSV_TEMPLATE_HEADERS)
+    for r in CSV_TEMPLATE_ROWS:
+        writer.writerow(r)
+    output.seek(0)
+    response = Response(
+        content=output.getvalue().encode("utf-8-sig"),
+        media_type="text/csv"
+    )
+    response.headers["Content-Disposition"] = 'attachment; filename="plantilla_importacion_parametros_econorma.csv"'
+    return response
+
 @router.get("/{param_id}")
 def get_param_detail(param_id: int):
     param = get_parameter_by_id(param_id)
