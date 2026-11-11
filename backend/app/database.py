@@ -755,6 +755,9 @@ def get_filter_options() -> Dict[str, Any]:
     cursor.execute("SELECT DISTINCT category FROM parameters WHERE category IS NOT NULL AND category != '' ORDER BY category;")
     categories = [r["category"] for r in cursor.fetchall() if r["category"]]
 
+    cursor.execute("SELECT DISTINCT subcategory FROM parameters WHERE subcategory IS NOT NULL AND subcategory != '' ORDER BY subcategory;")
+    subcategories = [r["subcategory"] for r in cursor.fetchall() if r["subcategory"]]
+
     cursor.execute("SELECT DISTINCT evaluation_period FROM parameters WHERE evaluation_period IS NOT NULL AND evaluation_period != '' ORDER BY evaluation_period;")
     evaluation_periods = [r["evaluation_period"] for r in cursor.fetchall() if r["evaluation_period"]]
 
@@ -799,6 +802,34 @@ def get_filter_options() -> Dict[str, Any]:
         "pairs": lmp_raw
     }
 
+    eca_water_hierarchy = {
+        "Categoría 1: Poblacional y Recreacional": [
+            "A1: Aguas que pueden ser potabilizadas con desinfección",
+            "A2: Aguas que pueden ser potabilizadas con tratamiento convencional",
+            "A3: Aguas que pueden ser potabilizadas con tratamiento avanzado",
+            "B1: Contacto primario",
+            "B2: Contacto secundario"
+        ],
+        "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales": [
+            "C1: Extracción y cultivo de moluscos, equinodermos y tunicados en aguas marino costeras",
+            "C2: Extracción y cultivo de otras especies hidrobiológicas en aguas marino costeras",
+            "C3: Actividades marino portuarias, industriales o de saneamiento en aguas marino costeras",
+            "C4: Extracción y cultivo de especies hidrobiológicas en lagos o lagunas"
+        ],
+        "Categoría 3: Riego de vegetales y bebida de animales": [
+            "D1: Riego de vegetales - Agua para riego no restringido",
+            "D1: Riego de vegetales - Agua para riego restringido",
+            "D2: Bebida de animales"
+        ],
+        "Categoría 4: Conservación del ambiente acuático": [
+            "E1: Lagunas y lagos",
+            "E2: Ríos - Costa y sierra",
+            "E2: Ríos - Selva",
+            "E3: Ecosistemas costeros y marinos - Estuarios",
+            "E3: Ecosistemas costeros y marinos - Marinos"
+        ]
+    }
+
     conn.close()
     return {
         "instruments": instruments,
@@ -807,6 +838,8 @@ def get_filter_options() -> Dict[str, Any]:
         "regulated_objects": regulated_objects,
         "sector_relation_types": sector_relation_types,
         "categories": categories,
+        "subcategories": subcategories,
+        "eca_water_hierarchy": eca_water_hierarchy,
         "evaluation_periods": evaluation_periods,
         "issuing_entities": entities,
         "norm_codes": norm_codes,
