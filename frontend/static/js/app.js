@@ -483,6 +483,34 @@ const EcoNorma = (function() {
     if (doSearch) executeSearch();
   }
 
+  const ECA_WATER_HIERARCHY = {
+    'Categoría 1: Poblacional y Recreacional': [
+      { code: 'A1', label: 'A1: Aguas que pueden ser potabilizadas con desinfección' },
+      { code: 'A2', label: 'A2: Aguas que pueden ser potabilizadas con tratamiento convencional' },
+      { code: 'A3', label: 'A3: Aguas que pueden ser potabilizadas con tratamiento avanzado' },
+      { code: 'B1', label: 'B1: Contacto primario' },
+      { code: 'B2', label: 'B2: Contacto secundario' }
+    ],
+    'Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales': [
+      { code: 'C1', label: 'C1: Extracción y cultivo de moluscos, equinodermos y tunicados en aguas marino costeras' },
+      { code: 'C2', label: 'C2: Extracción y cultivo de otras especies hidrobiológicas en aguas marino costeras' },
+      { code: 'C3', label: 'C3: Actividades marino portuarias, industriales o de saneamiento en aguas marino costeras' },
+      { code: 'C4', label: 'C4: Extracción y cultivo de especies hidrobiológicas en lagos o lagunas' }
+    ],
+    'Categoría 3: Riego de vegetales y bebida de animales': [
+      { code: 'D1-NR', label: 'D1: Riego de vegetales - Agua para riego no restringido' },
+      { code: 'D1-R', label: 'D1: Riego de vegetales - Agua para riego restringido' },
+      { code: 'D2', label: 'D2: Bebida de animales' }
+    ],
+    'Categoría 4: Conservación del ambiente acuático': [
+      { code: 'E1', label: 'E1: Lagunas y lagos' },
+      { code: 'E2-CS', label: 'E2: Ríos - Costa y sierra' },
+      { code: 'E2-S', label: 'E2: Ríos - Selva' },
+      { code: 'E3-EST', label: 'E3: Ecosistemas costeros y marinos - Estuarios' },
+      { code: 'E3-MAR', label: 'E3: Ecosistemas costeros y marinos - Marinos' }
+    ]
+  };
+
   function onEcaCategoryChange() {
     const sel = document.getElementById('ecaCategorySelect');
     state.category = sel ? sel.value : 'TODOS';
@@ -494,7 +522,20 @@ const EcoNorma = (function() {
 
   function onEcaSubcategoryChange() {
     const sel = document.getElementById('ecaSubcategorySelect');
-    state.subcategory = sel ? sel.value : 'TODOS';
+    const selectedVal = sel ? sel.value : 'TODOS';
+    state.subcategory = selectedVal;
+
+    // Sincronizar automáticamente la categoría padre si se elige una subcategoría específica
+    if (selectedVal !== 'TODOS') {
+      for (const [catName, items] of Object.entries(ECA_WATER_HIERARCHY)) {
+        if (items.some(item => item.label === selectedVal || item.code === selectedVal)) {
+          state.category = catName;
+          const catSel = document.getElementById('ecaCategorySelect');
+          if (catSel) catSel.value = catName;
+          break;
+        }
+      }
+    }
     state.page = 1;
     executeSearch();
   }
@@ -503,27 +544,38 @@ const EcoNorma = (function() {
     const subSel = document.getElementById('ecaSubcategorySelect');
     if (!subSel) return;
     const cat = state.category;
-    subSel.innerHTML = '<option value="TODOS">Todas las subcategorías</option>';
-    
-    const allSubs = state.filterOptions.subcategories || [];
-    let relevantSubs = allSubs;
-    if (cat === 'Categoría 1') {
-      relevantSubs = allSubs.filter(s => s.includes('A1') || s.includes('A2') || s.includes('A3') || s.includes('B1') || s.includes('B2') || s.includes('Poblacional') || s.includes('Recreacional'));
-    } else if (cat === 'Categoría 2') {
-      relevantSubs = allSubs.filter(s => s.includes('C1') || s.includes('C2') || s.includes('C3') || s.includes('C4') || s.includes('Extracción') || s.includes('Moluscos') || s.includes('Acuicultura'));
-    } else if (cat === 'Categoría 3') {
-      relevantSubs = allSubs.filter(s => s.includes('D1') || s.includes('D2') || s.includes('Riego') || s.includes('Bebida'));
-    } else if (cat === 'Categoría 4') {
-      relevantSubs = allSubs.filter(s => s.includes('E1') || s.includes('E2') || s.includes('E3') || s.includes('Lagos') || s.includes('Ríos') || s.includes('Marinos') || s.includes('Ecosistemas'));
-    }
+    subSel.innerHTML = '';
 
-    relevantSubs.forEach(s => {
-      if (!s) return;
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.textContent = s;
-      subSel.appendChild(opt);
-    });
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = 'TODOS';
+    defaultOpt.textContent = cat && cat !== 'TODOS'
+      ? `Todas las subcategorías (${cat.split(':')[0]})`
+      : 'Todas las subcategorías (predeterminado)';
+    subSel.appendChild(defaultOpt);
+
+    if (cat && cat !== 'TODOS') {
+      const matchKey = Object.keys(ECA_WATER_HIERARCHY).find(k => k === cat || k.startsWith(cat) || cat.startsWith(k.split(':')[0]));
+      const list = matchKey ? ECA_WATER_HIERARCHY[matchKey] : [];
+      list.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item.label;
+        opt.textContent = item.label;
+        subSel.appendChild(opt);
+      });
+    } else {
+      // Agrupado ordenado por cada categoría oficial
+      Object.entries(ECA_WATER_HIERARCHY).forEach(([catTitle, items]) => {
+        const group = document.createElement('optgroup');
+        group.label = catTitle;
+        items.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.label;
+          opt.textContent = item.label;
+          group.appendChild(opt);
+        });
+        subSel.appendChild(group);
+      });
+    }
 
     if (state.subcategory && state.subcategory !== 'TODOS') {
       subSel.value = state.subcategory;
@@ -681,6 +733,13 @@ const EcoNorma = (function() {
     if (dom.filterStatus) dom.filterStatus.value = state.status;
     if (dom.clearSearchBtn) dom.clearSearchBtn.classList.toggle('hidden', !state.query);
     if (dom.clearFilterSearchBtn) dom.clearFilterSearchBtn.classList.toggle('hidden', !state.query);
+    
+    const catSel = document.getElementById('ecaCategorySelect');
+    if (catSel) catSel.value = state.category;
+    updateEcaSubcategories();
+    const subSel = document.getElementById('ecaSubcategorySelect');
+    if (subSel) subSel.value = state.subcategory;
+
     syncPillsToState();
   }
 
