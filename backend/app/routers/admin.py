@@ -516,6 +516,83 @@ def clean_import_record(raw: dict) -> dict:
             sec = cleaned.get("sector") or "regulado"
             cleaned["regulated_object"] = f"Efluentes o emisiones del sector {sec}"
 
+    # Normalización de Categoría y Subcategoría para ECA Agua (D.S. 004-2017-MINAM)
+    if cleaned.get("instrument") == "ECA" and cleaned.get("environmental_medium") == "Agua":
+        cat_raw = str(cleaned.get("category") or "").strip()
+        sub_raw = str(cleaned.get("subcategory") or "").strip()
+        cat_lower = cat_raw.lower()
+        sub_lower = sub_raw.lower()
+
+        sub_canonical = None
+        if "a1" in sub_lower or "desinfecci" in sub_lower:
+            sub_canonical = "A1: Aguas que pueden ser potabilizadas con desinfección"
+            if not cat_raw or "1" not in cat_raw:
+                cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "a2" in sub_lower or "convencional" in sub_lower:
+            sub_canonical = "A2: Aguas que pueden ser potabilizadas con tratamiento convencional"
+            if not cat_raw or "1" not in cat_raw:
+                cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "a3" in sub_lower or "avanzado" in sub_lower:
+            sub_canonical = "A3: Aguas que pueden ser potabilizadas con tratamiento avanzado"
+            if not cat_raw or "1" not in cat_raw:
+                cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "b1" in sub_lower or ("contacto" in sub_lower and "primario" in sub_lower):
+            sub_canonical = "B1: Contacto primario"
+            if not cat_raw or "1" not in cat_raw:
+                cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "b2" in sub_lower or ("contacto" in sub_lower and "secundario" in sub_lower):
+            sub_canonical = "B2: Contacto secundario"
+            if not cat_raw or "1" not in cat_raw:
+                cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "c1" in sub_lower or "molusco" in sub_lower:
+            sub_canonical = "C1: Extracción y cultivo de moluscos, equinodermos y tunicados en aguas marino costeras"
+            cleaned["category"] = "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales"
+        elif "c2" in sub_lower or "otras especies" in sub_lower:
+            sub_canonical = "C2: Extracción y cultivo de otras especies hidrobiológicas en aguas marino costeras"
+            cleaned["category"] = "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales"
+        elif "c3" in sub_lower or "portuaria" in sub_lower:
+            sub_canonical = "C3: Actividades marino portuarias, industriales o de saneamiento en aguas marino costeras"
+            cleaned["category"] = "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales"
+        elif "c4" in sub_lower or "lagos o lagunas" in sub_lower or "especies hidrobiologicas en lagos" in sub_lower:
+            sub_canonical = "C4: Extracción y cultivo de especies hidrobiológicas en lagos o lagunas"
+            cleaned["category"] = "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales"
+        elif "d1" in sub_lower and ("no restringido" in sub_lower or "sin restric" in sub_lower):
+            sub_canonical = "D1: Riego de vegetales - Agua para riego no restringido"
+            cleaned["category"] = "Categoría 3: Riego de vegetales y bebida de animales"
+        elif "d1" in sub_lower:
+            sub_canonical = "D1: Riego de vegetales - Agua para riego restringido"
+            cleaned["category"] = "Categoría 3: Riego de vegetales y bebida de animales"
+        elif "d2" in sub_lower or "bebida" in sub_lower:
+            sub_canonical = "D2: Bebida de animales"
+            cleaned["category"] = "Categoría 3: Riego de vegetales y bebida de animales"
+        elif "e1" in sub_lower:
+            sub_canonical = "E1: Lagunas y lagos"
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+        elif "e2" in sub_lower and "selva" in sub_lower:
+            sub_canonical = "E2: Ríos - Selva"
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+        elif "e2" in sub_lower:
+            sub_canonical = "E2: Ríos - Costa y sierra"
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+        elif "e3" in sub_lower and "marino" in sub_lower and "estuario" not in sub_lower:
+            sub_canonical = "E3: Ecosistemas costeros y marinos - Marinos"
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+        elif "e3" in sub_lower:
+            sub_canonical = "E3: Ecosistemas costeros y marinos - Estuarios"
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+
+        if sub_canonical:
+            cleaned["subcategory"] = sub_canonical
+
+        if "1" in cat_lower or "poblacional" in cat_lower:
+            cleaned["category"] = "Categoría 1: Poblacional y Recreacional"
+        elif "2" in cat_lower or "extraccion" in cat_lower or "extracción" in cat_lower:
+            cleaned["category"] = "Categoría 2: Extracción, cultivo y otras actividades marino costeras y continentales"
+        elif "3" in cat_lower or "riego" in cat_lower or "animales" in cat_lower:
+            cleaned["category"] = "Categoría 3: Riego de vegetales y bebida de animales"
+        elif "4" in cat_lower or "conservacion" in cat_lower or "conservación" in cat_lower:
+            cleaned["category"] = "Categoría 4: Conservación del ambiente acuático"
+
     # Condición de aplicabilidad para VMA
     if inst == "VMA" and not cleaned.get("applicability_condition"):
         cleaned["applicability_condition"] = "Descargas de aguas residuales no domésticas (UND) a la red de alcantarillado sanitario (D.S. 010-2019-VIVIENDA)"
@@ -554,7 +631,7 @@ CSV_TEMPLATE_ROWS = [
     [
         "ECA",
         "Agua",
-        "Categoría 1",
+        "Categoría 1: Poblacional y Recreacional",
         "A1: Aguas que pueden ser potabilizadas con desinfección",
         "Plomo total",
         "Pb",
