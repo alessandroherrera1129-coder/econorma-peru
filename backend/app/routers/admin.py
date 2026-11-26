@@ -463,6 +463,17 @@ def clean_import_record(raw: dict) -> dict:
         else:
             cleaned["environmental_medium"] = cleaned["environmental_medium"].capitalize()
 
+    # Unidad predeterminada para parámetros cualitativos o adimensionales si viene vacía
+    if not cleaned.get("unit"):
+        p_name = str(cleaned.get("parameter_name") or "").lower()
+        v_text = str(cleaned.get("value_text") or "").lower()
+        if "materiales flotantes" in p_name or "ausencia" in v_text:
+            cleaned["unit"] = "Ausencia"
+        elif "trihalometano" in p_name or "formula" in v_text or "fórmula" in v_text:
+            cleaned["unit"] = "Adimensional"
+        elif cleaned.get("value_text"):
+            cleaned["unit"] = "N/A"
+
     # Generación automática de value_text si no fue proporcionado
     if not cleaned.get("value_text"):
         min_v = cleaned.get("min_value")
